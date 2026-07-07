@@ -1,0 +1,28 @@
+# ===== 대용량 원본 데이터 (깃 제외) =====
+/data/
+/code/data/*
+# --- 축약 데이터만 예외 포함 (재현용) ---
+!/code/data/processed/
+/code/data/processed/*
+!/code/data/processed/data.train.txt
+!/code/data/processed/data.test.txt
+!/code/data/processed/data.valid.paper.txt
+!/code/data/4-1. h.all.v2026.1.Hs.symbols.gmt
+!/code/data/4-2. c2.cp.kegg_legacy.v2026.1.Hs.symbols.gmt
+
+# ===== 백업 / 무관 프로젝트 =====
+/code/R-scripts-working_backup_*/
+/code/DeepMSProfiler/
+
+# ===== 개인문서 · 논문 PDF (scope 제외) =====
+/docs/
+
+# ===== 잡파일 =====
+.DS_Store
+Thumbs.db
+*.tmp
+__pycache__/
+*.pyc
+.Rhistory
+.RData
+.Rproj.user/

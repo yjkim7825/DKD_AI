@@ -1,0 +1,24 @@
+# Python 이식 파이프라인 의존성 (STEP별)
+# 설치: py -m pip install -r requirements.txt
+# ※ 일부(gseapy/scanpy/xgboost)는 무거움. 미설치 시 해당 STEP 은 TODO 안내 후 스킵.
+
+# 공통 (STEP1~6)
+pandas>=2.0
+numpy>=1.24
+scipy>=1.10
+
+# STEP3 ComBat
+inmoose>=0.7            # pycombat_norm (대안: combat)  # ComBat 배치보정
+
+# STEP4 ML/ROC
+scikit-learn>=1.3       # LASSO(L1 로지스틱), RFECV(SVM-RFE), roc_auc_score, RF/SVM
+xgboost>=2.0            # 결합모델 XGBoost (없으면 GradientBoosting 대체)
+matplotlib>=3.7         # ROC 그림
+
+# STEP5 GSEA
+gseapy>=1.1             # prerank(GSEA) + ssgsea
+
+# STEP7 scRNA
+scanpy>=1.10            # 단일세포 파이프라인
+harmonypy>=0.0.9        # Harmony 통합
+leidenalg>=0.10         # Leiden 클러스터

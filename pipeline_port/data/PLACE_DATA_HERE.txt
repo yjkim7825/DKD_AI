@@ -1,0 +1,10 @@
+이 폴더(data/)에 GEO/GWAS 원본과 중간 파일을 둡니다.
+
+필수(2군 bulk 재현 최소):
+  - GSExxxxx_series_matrix.txt.gz   (GEO Series Matrix)
+  - GPLxxxx.txt                     (플랫폼 주석, probe→gene symbol)
+  - s1.txt / s2.txt / s3.txt        (Control/Early/Late 샘플명, 한 줄 1개)
+  - data.train.txt / data.test.txt  (학습/검증 발현행렬, 열='{샘플}_{그룹}')
+  - interGenes.List.txt             (후보 유전자 리스트, 선택)
+
+자세한 다운로드 목록·링크는 상위 폴더 README.md 의 '2. 필요한 데이터' 표 참고.

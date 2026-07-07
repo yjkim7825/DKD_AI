@@ -1,0 +1,56 @@
+"""STEP1-2 : limma DEG 3종 (R 02_deg.R 이식).
+
+대비: Late_vs_Early / Late_vs_Control / Early_vs_Control.
+필터: |logFC| > LOGFC_FILTER(0.585) & adj.P.Val < ADJP_FILTER(0.05).
+⚠️ limma 의 eBayes(moderated t)는 파이썬 직접 대응이 없어 per-gene Welch t-검정 + BH 로 근사.
+   방향(alt-ref)·임계값은 R 과 동일. 결과 개수는 eBayes 차이로 소폭 달라질 수 있음(PORT_REPORT 참조).
+출력: RES_DIR/DEG_all_*.txt, DEG_diff_*.txt
+"""
+import sys, pathlib
+sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]))
+import config
+import numpy as np
+import pandas as pd
+from scipy import stats
+
+
+def quantile_normalize(df: pd.DataFrame) -> pd.DataFrame:
+    """limma::normalizeBetweenArrays(quantile) 근사 — 열(샘플) 간 분위수 정규화."""
+    ranked_mean = df.stack().groupby(df.rank(method="first").stack().astype(int)).mean()
+    return df.rank(method="min").stack().astype(int).map(ranked_mean).unstack()
+
+
+def bh_adjust(p: np.ndarray) -> np.ndarray:
+    p = np.asarray(p); n = len(p); order = np.argsort(p)
+    adj = np.empty(n); adj[order] = (p[order] * n / (np.arange(n) + 1))[::-1]
+    adj = np.minimum.accumulate(adj)[::-1]
+    return np.clip(adj[np.argsort(order)] if False else adj, 0, 1)
+
+
+def run_contrast(mat, groups, alt, ref, tag):
+    cols_a = [c for c, g in zip(mat.columns, groups) if g == alt]
+    cols_r = [c for c, g in zip(mat.columns, groups) if g == ref]
+    A = mat[cols_a].to_numpy(); R = mat[cols_r].to_numpy()
+    logFC = A.mean(1) - R.mean(1)
+    t, p = stats.ttest_ind(A, R, axis=1, equal_var=False)
+    adj = bh_adjust(np.nan_to_num(p, nan=1.0))
+    res = pd.DataFrame({"id": mat.index, "logFC": logFC, "P.Value": p, "adj.P.Val": adj})
+    res = res.sort_values("adj.P.Val")
+    res.to_csv(config.RES_DIR / f"DEG_all_{tag}.txt", sep="\t", index=False)
+    sig = res[(res["logFC"].abs() > config.LOGFC_FILTER) & (res["adj.P.Val"] < config.ADJP_FILTER)]
+    sig.to_csv(config.RES_DIR / f"DEG_diff_{tag}.txt", sep="\t", index=False)
+    up = int((sig["logFC"] > 0).sum()); dn = int((sig["logFC"] < 0).sum())
+    print(f"[DEG {tag}] 유의 {len(sig)} (up {up} / down {dn})")
+
+
+def main():
+    mat = pd.read_csv(config.OUT_DIR / "GSE142025.labeled.txt", sep="\t", index_col=0)
+    groups = [c.split("_")[-1] for c in mat.columns]
+    mat = quantile_normalize(mat)
+    run_contrast(mat, groups, config.GROUP_LATE,  config.GROUP_EARLY,   "Late_vs_Early")
+    run_contrast(mat, groups, config.GROUP_LATE,  config.GROUP_CONTROL, "Late_vs_Control")
+    run_contrast(mat, groups, config.GROUP_EARLY, config.GROUP_CONTROL, "Early_vs_Control")
+
+
+if __name__ == "__main__":
+    main()
