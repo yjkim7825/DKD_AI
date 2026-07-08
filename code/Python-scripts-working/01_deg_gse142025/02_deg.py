@@ -21,10 +21,12 @@ def quantile_normalize(df: pd.DataFrame) -> pd.DataFrame:
 
 
 def bh_adjust(p: np.ndarray) -> np.ndarray:
-    p = np.asarray(p); n = len(p); order = np.argsort(p)
-    adj = np.empty(n); adj[order] = (p[order] * n / (np.arange(n) + 1))[::-1]
-    adj = np.minimum.accumulate(adj)[::-1]
-    return np.clip(adj[np.argsort(order)] if False else adj, 0, 1)
+    """Benjamini-Hochberg FDR (R p.adjust(method="BH") 와 동일)."""
+    p = np.asarray(p, float); n = len(p); order = np.argsort(p)
+    ranked = p[order] * n / (np.arange(1, n + 1))          # 오름차순 랭크별 p*n/rank
+    ranked = np.minimum.accumulate(ranked[::-1])[::-1]      # 위(큰 p)에서부터 단조화
+    adj = np.empty(n); adj[order] = np.clip(ranked, 0, 1)   # 원래 순서로 복원
+    return adj
 
 
 def run_contrast(mat, groups, alt, ref, tag):

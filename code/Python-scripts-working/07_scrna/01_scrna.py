@@ -37,6 +37,7 @@ MARKERS = {
 def main():
     try:
         import scanpy as sc
+        import anndata as ad
         import numpy as np
         import pandas as pd
     except Exception:
@@ -52,10 +53,16 @@ def main():
             with tarfile.open(tar) as t:
                 t.extractall(d)
         a = sc.read_10x_mtx(d / samp)
+        a.var_names_make_unique()
         a.obs["orig.ident"] = samp
         a.obs["group"] = config.GROUP_CONTROL if samp.startswith("NM") else config.GROUP_DKD
         adatas.append(a)
-    adata = adatas[0].concatenate(*adatas[1:], batch_key="sample") if len(adatas) > 1 else adatas[0]
+    # anndata 0.13: AnnData.concatenate 제거됨 → anndata.concat 사용(배치별 바코드 유일화)
+    if len(adatas) > 1:
+        adata = ad.concat(adatas, join="inner", label="sample",
+                          keys=[a.obs["orig.ident"].iloc[0] for a in adatas], index_unique="-")
+    else:
+        adata = adatas[0]
 
     # QC (R: nFeature 300~5000, mt<10)
     adata.var["mt"] = adata.var_names.str.startswith("MT-")
@@ -68,20 +75,29 @@ def main():
     sc.pp.highly_variable_genes(adata, n_top_genes=2000)
     adata.raw = adata
     sc.pp.scale(adata, max_value=10); sc.tl.pca(adata, n_comps=30)
-    sc.external.pp.harmony_integrate(adata, "orig.ident")   # Harmony 통합
-    sc.pp.neighbors(adata, use_rep="X_pca_harmony", n_pcs=30)
-    sc.tl.leiden(adata, resolution=0.5); sc.tl.umap(adata)
+    # Harmony 통합 — scanpy wrapper 가 버전차로 shape 오류 → harmonypy 직접 호출(Z_corr.T)
+    try:
+        import harmonypy
+        ho = harmonypy.run_harmony(adata.obsm["X_pca"], adata.obs, ["orig.ident"])
+        adata.obsm["X_pca_harmony"] = ho.Z_corr.T
+        rep = "X_pca_harmony"
+    except Exception as e:
+        print(f"[harmony] 통합 실패 → PCA 로 진행(부분실행): {e}")
+        rep = "X_pca"
+    sc.pp.neighbors(adata, use_rep=rep, n_pcs=30)
+    sc.tl.leiden(adata, resolution=0.5, flavor="igraph", n_iterations=2, directed=False)
+    sc.tl.umap(adata)
 
     # 마커기반 자동주석 (클러스터별 마커세트 평균발현 최대)
-    ad = adata.raw.to_adata()
+    adraw = adata.raw.to_adata()   # 정규화·전체유전자(스케일 전) — 마커/발현 조회용
     scores = {}
     for ct, gs in MARKERS.items():
-        gs = [g for g in gs if g in ad.var_names]
+        gs = [g for g in gs if g in adraw.var_names]
         if not gs:
             continue
-        sub = ad[:, gs].X
+        sub = adraw[:, gs].X
         m = np.asarray(sub.mean(axis=1)).ravel()
-        scores[ct] = pd.Series(m, index=ad.obs_names).groupby(adata.obs["leiden"]).mean()
+        scores[ct] = pd.Series(m, index=adraw.obs_names).groupby(adata.obs["leiden"].values).mean()
     smat = pd.DataFrame(scores)
     cl2ct = smat.idxmax(axis=1)
     adata.obs["celltype"] = adata.obs["leiden"].map(cl2ct).astype(str)
@@ -89,10 +105,11 @@ def main():
     # 핵심: FN1/ALDH2 세포유형별 발현
     rows = []
     for g in ["FN1", "ALDH2"]:
-        if g not in ad.var_names:
+        if g not in adraw.var_names:
             continue
-        expr = np.asarray(ad[:, g].X.todense()).ravel()
-        s = pd.Series(expr, index=ad.obs_names)
+        Xg = adraw[:, g].X
+        expr = np.asarray(Xg.todense()).ravel() if hasattr(Xg, "todense") else np.asarray(Xg).ravel()
+        s = pd.Series(expr, index=adraw.obs_names)
         for ct, idx in adata.obs.groupby("celltype").groups.items():
             v = s.loc[idx]
             rows.append({"gene": g, "celltype": ct, "mean_expr": float(v.mean()),

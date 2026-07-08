@@ -31,7 +31,14 @@ def _combat(mats, batch):
 
 
 def load_valid():
-    """검증 = ComBat(GSE104948 + GSE104954)."""
+    """검증 = ComBat(GSE104948 + GSE104954).
+
+    R step4_paper 와 '동일 입력'을 쓰기 위해, R 이 이미 만들어 둔 ComBat 결과
+    processed/data.valid.paper.txt 가 있으면 그것을 그대로 읽는다(재계산·inmoose 불필요).
+    없을 때만 원매트릭스에서 ComBat 을 재구성(fallback)."""
+    paper = config.OUT_DIR / "data.valid.paper.txt"
+    if paper.exists():
+        return pd.read_csv(paper, sep="\t", index_col=0)
     a = pd.read_csv(config.OUT_DIR / "GSE104948.labeled.txt", sep="\t", index_col=0)
     b = pd.read_csv(config.OUT_DIR / "GSE104954.labeled.txt", sep="\t", index_col=0)
     a.columns = [f"GSE104948_{c}" for c in a.columns]
@@ -51,12 +58,13 @@ def y_of(df):
 
 
 def main():
-    from sklearn.linear_model import LogisticRegression
+    from sklearn.linear_model import LogisticRegression, LogisticRegressionCV
     from sklearn.feature_selection import RFECV
     from sklearn.svm import SVC
     from sklearn.ensemble import RandomForestClassifier
     from sklearn.metrics import roc_auc_score
     from sklearn.model_selection import StratifiedKFold
+    from sklearn.preprocessing import StandardScaler
 
     train = pd.read_csv(config.OUT_DIR / "GSE96804.labeled.txt", sep="\t", index_col=0)
     valid = load_valid()
@@ -65,9 +73,13 @@ def main():
     pd.Series(feats).to_csv(OUT / "interGenes.List.txt", index=False, header=False)
 
     Xtr = train.loc[feats].T.to_numpy()
-    # ---- LASSO (L1 로지스틱, CV) ----
-    lasso = LogisticRegression(penalty="l1", solver="liblinear", C=1.0, max_iter=5000)
-    lasso.fit(Xtr, ytr)
+    # ---- LASSO (L1 로지스틱, λ 를 CV 로 선택 = glmnet cv.glmnet 대응) ----
+    # glmnet 은 표준화 후 cv 로 lambda.min 을 고름 → LogisticRegressionCV(penalty=l1) 로 대응.
+    Xtr_s = StandardScaler().fit_transform(Xtr)
+    lasso = LogisticRegressionCV(penalty="l1", solver="liblinear", Cs=20, random_state=123,
+                                 cv=StratifiedKFold(5), max_iter=5000, scoring="neg_log_loss")
+    import warnings; warnings.filterwarnings("ignore")   # sklearn 1.9 deprecation 소음 억제
+    lasso.fit(Xtr_s, ytr)
     lasso_genes = [f for f, c in zip(feats, lasso.coef_[0]) if abs(c) > 1e-8]
     # ---- SVM-RFE (선형 SVC + RFECV) ----
     rfe = RFECV(SVC(kernel="linear"), step=1, cv=StratifiedKFold(5), scoring="accuracy", min_features_to_select=2)

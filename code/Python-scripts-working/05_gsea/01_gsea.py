@@ -49,7 +49,27 @@ def run_kegg_ssgsea():
     ss = gp.ssgsea(data=expr, gene_sets=str(KEGG_GMT), outdir=None, sample_norm_method="rank", no_plot=True)
     scores = ss.res2d
     scores.to_csv(OUT / "KEGG.ssGSEA.scores.txt", sep="\t", index=False)
-    print(f"[KEGG ssGSEA] 저장. (FN1↔ECM_RECEPTOR, ALDH2↔대사 경로 상관은 확장 분석 TODO)")
+    print("[KEGG ssGSEA] 저장. FN1/ALDH2 ↔ 경로 상관 계산 중...")
+
+    # --- FN1/ALDH2 ↔ 경로 Spearman 상관 (R 대조: FN1↔ECM 0.919, ALDH2↔TCA 0.921) ---
+    from scipy.stats import spearmanr
+    mat = scores.pivot(index="Term", columns="Name", values="NES")   # 경로 × 샘플
+    samples = [s for s in mat.columns if s in expr.columns]; mat = mat[samples]
+    rows = []
+    for g in ["FN1", "ALDH2"]:
+        if g not in expr.index:
+            continue
+        gv = expr.loc[g, samples].astype(float).values
+        cs = pd.Series({p: spearmanr(gv, mat.loc[p, samples].astype(float).values).correlation
+                        for p in mat.index}).sort_values(ascending=False)
+        for p, r in cs.head(5).items():
+            rows.append({"gene": g, "pathway": p, "rho": round(float(r), 3), "kind": "top5"})
+        # R 대조용 특정 경로 명시(top5 밖이어도 기록)
+        for p in ["KEGG_ECM_RECEPTOR_INTERACTION", "KEGG_CITRATE_CYCLE_TCA_CYCLE"]:
+            if p in cs.index:
+                rows.append({"gene": g, "pathway": p, "rho": round(float(cs[p]), 3), "kind": "R대조"})
+        print(f"  [{g}] top: {cs.index[0]} rho={cs.iloc[0]:.3f}")
+    pd.DataFrame(rows).to_csv(OUT / "FN1_ALDH2_pathway_corr.csv", index=False)
 
 
 def main():
