@@ -1,0 +1,5 @@
+"id.exposure","id.outcome","outcome","exposure","method","Q","Q_df","Q_pval"
+"Z1kcsD","IBmiqt","FinnGen_R12_DKD","ALDH2","MR Egger",7.28110056472927,12,0.838491908719391
+"Z1kcsD","IBmiqt","FinnGen_R12_DKD","ALDH2","Inverse variance weighted",13.8347338618594,13,0.385585026831561
+"wW1aje","IBmiqt","FinnGen_R12_DKD","FN1","MR Egger",0.0531910022962528,1,0.81760090259607
+"wW1aje","IBmiqt","FinnGen_R12_DKD","FN1","Inverse variance weighted",2.38478235242727,2,0.303494686450141

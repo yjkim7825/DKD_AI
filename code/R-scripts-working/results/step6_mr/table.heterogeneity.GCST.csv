@@ -1,0 +1,5 @@
+"id.exposure","id.outcome","outcome","exposure","method","Q","Q_df","Q_pval"
+"Z1kcsD","1vEmPn","GWAScatalog_GCST90435706","ALDH2","MR Egger",6.99363868453776,12,0.858033649495209
+"Z1kcsD","1vEmPn","GWAScatalog_GCST90435706","ALDH2","Inverse variance weighted",7.14856797574249,13,0.894333661810226
+"wW1aje","1vEmPn","GWAScatalog_GCST90435706","FN1","MR Egger",1.45429204161141,1,0.227840504813799
+"wW1aje","1vEmPn","GWAScatalog_GCST90435706","FN1","Inverse variance weighted",1.45465319038153,2,0.483199051561846
