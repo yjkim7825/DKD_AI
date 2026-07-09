@@ -1,11 +1,11 @@
-# 11_step5_gsea.R -----------------------------------------------------------
-# STEP 5 : Hallmark GSEA + KEGG ssGSEA (원본 hallmark.gsea.R 로직)
-#   (1) Hallmark GSEA — GSE142025 DEG 3비교(Early/Late vs Control, Late vs Early)의 logFC 랭킹.
-#       제공 gmt(../data/4-1. h.all...) 사용(원본은 msigdbr; 오프라인이라 gmt 파일로 대체).
-#       FN1(EMT·산화)·ALDH2(산화) 관련 Hallmark 경로 유의성 확인.
-#   (2) KEGG ssGSEA — GSE96804(train) 발현에 KEGG(../data/4-2) ssGSEA 로 샘플별 경로점수.
-#       DKD vs Control Wilcoxon + FN1/ALDH2 발현과 상관. FN1/ALDH2 관련 KEGG 경로 확인.
-#   출력: results/step5_gsea/
+# 01_gsea.R -----------------------------------------------------------------
+# STEP 5 : GSEA(Hallmark+KEGG) + ssGSEA.  원본 GSEA.R / hallmark.gsea.R 1:1 대조.
+#   (1) Hallmark GSEA — 원본 hallmark.gsea.R 와 동일: GSE142025 DEG 3비교의 **diff_(유의 DEG)**
+#       logFC 랭킹 → GSEA(TERM2GENE, pvalueCutoff=1). 제공 gmt(4-1) 사용(원본 msigdbr 대체, 오프라인).
+#   (2) KEGG GSEA — 원본 GSEA.R 와 동일: 동일 diff_ DEG 를 KEGG gmt(4-2)로 GSEA. (기존 파이프라인 누락분 추가)
+#   (3) KEGG ssGSEA — 논문 Fig 2H,I(단계별 경로점수) 방법: GSE96804 발현에 ssGSEA →
+#       DKD vs Control Wilcoxon + FN1/ALDH2 발현 상관(멀티오믹스 연결). 원본 GSEA.R(=GSEA) 와는 다른 분석.
+#   출력: results/step5_gsea/. 원본 데이터·스크립트 무수정.
 # ---------------------------------------------------------------------------
 
 suppressMessages({
@@ -31,20 +31,26 @@ read_gmt_std <- function(path) {
 hm <- read_gmt_std(HALLMARK_GMT)   # term2gene: (term, gene)
 message("[Hallmark] gene sets: ", length(unique(hm$term)))
 
-run_gsea <- function(degFile, tag) {
-  d <- read.table(file.path(RES_DIR, degFile), header = TRUE, sep = "\t", row.names = 1, check.names = FALSE)
+# 원본 GSEA.R/hallmark.gsea.R 와 동일: diff_(유의 DEG) 의 logFC 랭킹으로 GSEA.
+read_diff_lfc <- function(degFile) {
+  d <- read.table(file.path(RES_DIR, "step1_deg", degFile), header = TRUE, sep = "\t", row.names = 1, check.names = FALSE)
   lfc <- d$logFC; names(lfc) <- rownames(d)
-  lfc <- sort(lfc[!is.na(lfc) & !duplicated(names(lfc))], decreasing = TRUE)
-  kk <- GSEA(lfc, TERM2GENE = hm, pvalueCutoff = 1, seed = TRUE, verbose = FALSE)
+  sort(lfc[!is.na(lfc) & !duplicated(names(lfc))], decreasing = TRUE)
+}
+run_gsea <- function(degFile, tag, term2gene, prefix) {
+  lfc <- read_diff_lfc(degFile)
+  kk <- GSEA(lfc, TERM2GENE = term2gene, pvalueCutoff = 1, seed = TRUE, verbose = FALSE)
   tab <- as.data.frame(kk)
-  write.table(tab, file.path(OUT, paste0("Hallmark.GSEA.", tag, ".txt")), sep = "\t", quote = FALSE, row.names = FALSE)
-  message("[Hallmark ", tag, "] total ", nrow(tab), " | sig(p.adj<0.05) ", sum(tab$p.adjust < 0.05))
+  write.table(tab, file.path(OUT, paste0(prefix, ".GSEA.", tag, ".txt")), sep = "\t", quote = FALSE, row.names = FALSE)
+  message("[", prefix, " ", tag, "] ranked ", length(lfc), " genes | total ", nrow(tab),
+          " | sig(p.adj<0.05) ", sum(tab$p.adjust < 0.05))
   tab
 }
-cmp <- list(Early_vs_Control = "DEG_all_Early_vs_Control.txt",
-            Late_vs_Control  = "DEG_all_Late_vs_Control.txt",
-            Late_vs_Early    = "DEG_all_Late_vs_Early.txt")
-hres <- Map(function(f, n) run_gsea(f, n), cmp, names(cmp))
+# 원본과 동일하게 diff_ (유의 DEG) 입력
+cmp <- list(Early_vs_Control = "DEG_diff_Early_vs_Control.txt",
+            Late_vs_Control  = "DEG_diff_Late_vs_Control.txt",
+            Late_vs_Early    = "DEG_diff_Late_vs_Early.txt")
+hres <- Map(function(f, n) run_gsea(f, n, hm, "Hallmark"), cmp, names(cmp))
 
 # FN1/ALDH2 관련 Hallmark 경로(EMT/ROS/염증 등) 요약
 focus_pat <- "EPITHELIAL_MESENCHYMAL|REACTIVE_OXYGEN|OXIDATIVE|INFLAMMATORY|TGF_BETA|APOPTOSIS"
@@ -56,10 +62,36 @@ focusTab <- do.call(rbind, lapply(names(hres), function(n) {
 print(focusTab, row.names = FALSE)
 write.csv(focusTab, file.path(OUT, "Hallmark_focus_pathways.csv"), row.names = FALSE)
 
-## ================= (2) KEGG ssGSEA =================
+# 논문 대조 CSV (Hallmark EMT/OXPHOS NES) — 논문 Fig2: EMT Late_vs_Ctrl +2.52 / Late_vs_Early +2.59, OXPHOS -1.62 / -2.02
+getNES <- function(comp, pat) { t <- hres[[comp]]; v <- t$NES[grepl(pat, t$ID)]; if (length(v)) v[1] else NA }
+hall_cmp <- data.frame(
+  pathway = c("EMT", "EMT", "OXIDATIVE_PHOSPHORYLATION", "OXIDATIVE_PHOSPHORYLATION"),
+  comparison = c("Late_vs_Control", "Late_vs_Early", "Late_vs_Control", "Late_vs_Early"),
+  paper_NES = c(2.52, 2.59, -1.62, -2.02),
+  ours_NES = c(getNES("Late_vs_Control", "EPITHELIAL_MESENCHYMAL"),
+               getNES("Late_vs_Early",   "EPITHELIAL_MESENCHYMAL"),
+               getNES("Late_vs_Control", "OXIDATIVE_PHOSPHORYLATION"),
+               getNES("Late_vs_Early",   "OXIDATIVE_PHOSPHORYLATION")))
+hall_cmp$ours_NES <- round(hall_cmp$ours_NES, 2)
+write.csv(hall_cmp, file.path(OUT, "compare_paper_vs_ours.Hallmark_NES.csv"), row.names = FALSE)
+cat("\n== Hallmark NES 논문 대조 ==\n"); print(hall_cmp, row.names = FALSE)
+
+## ================= (2) KEGG GSEA (원본 GSEA.R) =================
 kegg <- read_gmt_std(KEGG_GMT)
+message("\n[KEGG GSEA] gene sets: ", length(unique(kegg$term)))
+kres <- Map(function(f, n) run_gsea(f, n, kegg, "KEGG"), cmp, names(cmp))
+# FN1(ECM)·ALDH2(TCA/대사) 관련 KEGG 경로 요약
+kfocus_pat <- "ECM_RECEPTOR|CITRATE_CYCLE|TCA|OXIDATIVE_PHOSPHORYLATION|FOCAL_ADHESION|TRYPTOPHAN|ARGININE"
+kfocusTab <- do.call(rbind, lapply(names(kres), function(n) {
+  t <- kres[[n]]; t <- t[grepl(kfocus_pat, t$ID), c("ID","NES","pvalue","p.adjust")]
+  if (nrow(t)) cbind(Comparison = n, t) else NULL
+}))
+if (!is.null(kfocusTab)) { cat("\n== KEGG GSEA FN1/ALDH2 관련 경로 ==\n"); print(kfocusTab, row.names = FALSE)
+  write.csv(kfocusTab, file.path(OUT, "KEGG.GSEA_focus_pathways.csv"), row.names = FALSE) }
+
+## ================= (3) KEGG ssGSEA (논문 Fig 2H,I) =================
 keggList <- split(kegg$gene, kegg$term)
-message("\n[KEGG] gene sets: ", length(keggList))
+message("\n[KEGG ssGSEA] gene sets: ", length(keggList))
 
 expr <- as.matrix(read.table(file.path(OUT_DIR, "GSE96804.labeled.txt"),
                              header = TRUE, sep = "\t", check.names = FALSE, row.names = 1))

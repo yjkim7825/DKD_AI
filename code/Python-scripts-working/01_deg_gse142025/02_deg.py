@@ -13,6 +13,8 @@ import numpy as np
 import pandas as pd
 from scipy import stats
 
+S1 = config.RES_DIR / "step1_deg"; S1.mkdir(parents=True, exist_ok=True)  # STEP 구분 저장(R 과 동일)
+
 
 def quantile_normalize(df: pd.DataFrame) -> pd.DataFrame:
     """limma::normalizeBetweenArrays(quantile) 근사 — 열(샘플) 간 분위수 정규화."""
@@ -38,20 +40,24 @@ def run_contrast(mat, groups, alt, ref, tag):
     adj = bh_adjust(np.nan_to_num(p, nan=1.0))
     res = pd.DataFrame({"id": mat.index, "logFC": logFC, "P.Value": p, "adj.P.Val": adj})
     res = res.sort_values("adj.P.Val")
-    res.to_csv(config.RES_DIR / f"DEG_all_{tag}.txt", sep="\t", index=False)
+    res.to_csv(S1 / f"DEG_all_{tag}.txt", sep="\t", index=False)
     sig = res[(res["logFC"].abs() > config.LOGFC_FILTER) & (res["adj.P.Val"] < config.ADJP_FILTER)]
-    sig.to_csv(config.RES_DIR / f"DEG_diff_{tag}.txt", sep="\t", index=False)
+    sig.to_csv(S1 / f"DEG_diff_{tag}.txt", sep="\t", index=False)
     up = int((sig["logFC"] > 0).sum()); dn = int((sig["logFC"] < 0).sum())
     print(f"[DEG {tag}] 유의 {len(sig)} (up {up} / down {dn})")
+    return len(sig), up, dn
 
 
 def main():
     mat = pd.read_csv(config.OUT_DIR / "GSE142025.labeled.txt", sep="\t", index_col=0)
     groups = [c.split("_")[-1] for c in mat.columns]
     mat = quantile_normalize(mat)
-    run_contrast(mat, groups, config.GROUP_LATE,  config.GROUP_EARLY,   "Late_vs_Early")
+    n_lve, up, dn = run_contrast(mat, groups, config.GROUP_LATE,  config.GROUP_EARLY,   "Late_vs_Early")
     run_contrast(mat, groups, config.GROUP_LATE,  config.GROUP_CONTROL, "Late_vs_Control")
     run_contrast(mat, groups, config.GROUP_EARLY, config.GROUP_CONTROL, "Early_vs_Control")
+    # 논문 대조 CSV (Late_vs_Early: 논문 2,833 / up1,557 / down1,276)
+    pd.DataFrame({"metric": ["Late_vs_Early total", "up", "down"], "paper": [2833, 1557, 1276],
+                  "ours": [n_lve, up, dn]}).to_csv(S1 / "compare_paper_vs_ours.GSE142025.csv", index=False)
 
 
 if __name__ == "__main__":

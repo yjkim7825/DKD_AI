@@ -91,5 +91,5 @@ for(i in 1:nrow(comb)){
   csvv<-round(csv2[csv2$model==m,col],3)
   cat(sprintf("  %-8s %-5s 그림=%.3f csv=%.3f 일치=%s\n", m,s,comb$AUC[i],csvv, isTRUE(all.equal(comb$AUC[i],csvv,tolerance=0.02))))
 }
-write.csv(single, file.path(OUT,"single_gene_ROC_withCI.csv"), row.names=FALSE)
+write.csv(single, file.path(OUT,"ROC_figures_index.csv"), row.names=FALSE)  # 그림 인덱스(01의 10유전자 CSV 는 보존)
 cat("\n[완료] ROC 그림 저장 ->", OUT, "\n")

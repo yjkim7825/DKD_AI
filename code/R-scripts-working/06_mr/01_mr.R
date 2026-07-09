@@ -92,10 +92,14 @@ gcst <- read_outcome(GCST, TRUE,
           other_allele="other_allele", p_value="pval", effect_allele_frequency="eaf"),
   name = "GWAScatalog_GCST90435706")
 
-## ---- 4) harmonise + MR ----
+## ---- 4) harmonise + MR (원본 Mendelian randomization 1.R 로직) ----
 run_mr <- function(outcome_dat, tag) {
   message("\n===== MR: ", tag, " =====")
   dat <- harmonise_data(exposure_dat, outcome_dat)
+  # 원본과 동일: outcome 에서 유의(p<=5e-06)한 SNP 제거(역인과/다면발현 방지)
+  n0 <- nrow(dat)
+  dat <- dat[!is.na(dat$pval.outcome) & dat$pval.outcome > 5e-06, ]
+  message("[", tag, "] pval.outcome>5e-06 필터: ", n0, " -> ", nrow(dat), " SNP")
   outTab <- dat[dat$mr_keep == TRUE, ]
   write.csv(outTab, file.path(OUT, paste0("table.SNP.", tag, ".csv")), row.names = FALSE)
   res <- mr(dat, method_list = c("mr_ivw", "mr_egger_regression", "mr_weighted_median"))
@@ -105,13 +109,40 @@ run_mr <- function(outcome_dat, tag) {
   ple <- tryCatch(mr_pleiotropy_test(dat), error = function(e) NULL)
   if(!is.null(het)) write.csv(het, file.path(OUT, paste0("table.heterogeneity.", tag, ".csv")), row.names = FALSE)
   if(!is.null(ple)) write.csv(ple, file.path(OUT, paste0("table.pleiotropy.", tag, ".csv")), row.names = FALSE)
+  # 민감도(원본 MR1.R): single-SNP + leave-one-out
+  ss  <- tryCatch(mr_singlesnp(dat), error = function(e) NULL)
+  loo <- tryCatch(mr_leaveoneout(dat), error = function(e) NULL)
+  if(!is.null(ss))  write.csv(ss,  file.path(OUT, paste0("table.singleSNP.", tag, ".csv")), row.names = FALSE)
+  if(!is.null(loo)) write.csv(loo, file.path(OUT, paste0("table.leaveoneout.", tag, ".csv")), row.names = FALSE)
   cat("\n[", tag, "] IVW 결과:\n")
   ivw <- mrTab[mrTab$method == "Inverse variance weighted", c("exposure","nsnp","or","or_lci95","or_uci95","pval")]
   print(ivw, row.names = FALSE)
-  invisible(mrTab)
+  list(mrTab = mrTab, ple = ple)
 }
 mr_finn <- run_mr(finn, "FinnGen")
 mr_gcst <- run_mr(gcst, "GCST")
+
+## ---- 4b) IVW 필터 (원본 Mendelian randomization 2.R): IVW p<0.05 & 3방법 OR방향 일치 & 다면발현 p>0.05 ----
+ivw_filter <- function(mrTab, ple, tag) {
+  keep <- data.frame()
+  for (g in unique(mrTab$exposure)) {
+    gd <- mrTab[mrTab$exposure == g, ]
+    if (nrow(gd) == 3) {
+      ivwp <- gd$pval[gd$method == "Inverse variance weighted"]
+      dirOK <- (sum(gd$or > 1) == 3) || (sum(gd$or < 1) == 3)
+      if (length(ivwp) && ivwp < 0.05 && dirOK) keep <- rbind(keep, gd)
+    }
+  }
+  if (nrow(keep) && !is.null(ple)) {
+    okGenes <- ple$exposure[ple$pval > 0.05]
+    keep <- keep[keep$exposure %in% okGenes, ]
+  }
+  if (nrow(keep)) write.csv(keep, file.path(OUT, paste0("IVW.filter.", tag, ".csv")), row.names = FALSE)
+  cat("[IVW필터 ", tag, "] 통과 유전자: ", paste(unique(keep$exposure), collapse=", "), "\n", sep="")
+  keep
+}
+ivw_filter(mr_finn$mrTab, mr_finn$ple, "FinnGen")
+ivw_filter(mr_gcst$mrTab, mr_gcst$ple, "GCST")
 
 ## ---- 5) 저자 MR(Supp9 IVW)와 대조 ----
 s9 <- fread(file.path(DATA_ROOT, "6. Article related data",
@@ -120,5 +151,14 @@ s9 <- fread(file.path(DATA_ROOT, "6. Article related data",
 s9$b <- as.numeric(s9$b)
 s9ivw <- s9[s9$method == "Inverse variance weighted" & s9$exposure %in% c("FN1","ALDH2"),
             c("exposure","nsnp","b","se","pval")]
+setnames(s9ivw, c("nsnp","b","se","pval"), c("paper_nsnp","paper_b","paper_se","paper_pval"))
 cat("\n== 저자 Supp9 IVW (GWAS Catalog outcome) ==\n"); print(s9ivw, row.names = FALSE)
+
+# 우리 GCST IVW vs 저자 Supp9 대조 CSV
+ourIVW <- mr_gcst$mrTab[mr_gcst$mrTab$method == "Inverse variance weighted",
+                        c("exposure","nsnp","b","se","or","pval")]
+setnames(ourIVW, c("nsnp","b","se","pval"), c("ours_nsnp","ours_b","ours_se","ours_pval"))
+cmp <- merge(as.data.frame(s9ivw), as.data.frame(ourIVW), by = "exposure", all = TRUE)
+write.csv(cmp, file.path(OUT, "compare_paper_vs_ours.MR_IVW.csv"), row.names = FALSE)
+cat("\n== 논문 Supp9 vs 우리 (GCST IVW) ==\n"); print(cmp, row.names = FALSE)
 message("\n[STEP6] 완료 -> ", OUT)

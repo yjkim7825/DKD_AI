@@ -12,29 +12,46 @@ import config
 import pandas as pd
 
 OUT = config.RES_DIR / "step5_gsea"; OUT.mkdir(parents=True, exist_ok=True)
+S1  = config.RES_DIR / "step1_deg"                    # 원본과 동일 diff_ 입력 위치
 HALLMARK_GMT = config.DATA_ROOT / "4-1. h.all.v2026.1.Hs.symbols.gmt"
 KEGG_GMT     = config.DATA_ROOT / "4-2. c2.cp.kegg_legacy.v2026.1.Hs.symbols.gmt"
 FOCUS = "EPITHELIAL_MESENCHYMAL|REACTIVE_OXYGEN|OXIDATIVE|INFLAMMATORY|TGF_BETA|APOPTOSIS"
+KFOCUS = "ECM_RECEPTOR|CITRATE_CYCLE|OXIDATIVE_PHOSPHORYLATION|FOCAL_ADHESION|TRYPTOPHAN"
+TAGS = ["Late_vs_Early", "Late_vs_Control", "Early_vs_Control"]
+
+
+def _prerank(rnk, gmt):
+    import gseapy as gp
+    return gp.prerank(rnk=rnk, gene_sets=str(gmt), min_size=5, max_size=1000,
+                      permutation_num=1000, seed=123, outdir=None, no_plot=True).res2d
+
+
+def _run_gsea(gmt, prefix, focus):
+    """원본 GSEA.R/hallmark.gsea.R 와 동일: diff_(유의 DEG) logFC 랭킹으로 GSEA."""
+    try:
+        import gseapy as gp  # noqa
+    except Exception:
+        print(f"[{prefix}] TODO: gseapy 미설치 → 'pip install gseapy'."); return
+    for tag in TAGS:
+        f = S1 / f"DEG_diff_{tag}.txt"                # 원본과 동일 diff_ 입력
+        if not f.exists():
+            print(f"[{prefix} {tag}] diff DEG 없음 → STEP1 02_deg 먼저: {f}"); continue
+        deg = pd.read_csv(f, sep="\t")
+        rnk = deg[["id", "logFC"]].dropna().drop_duplicates("id").sort_values("logFC", ascending=False)
+        tab = _prerank(rnk, gmt)
+        tab.to_csv(OUT / f"{prefix}.GSEA.{tag}.txt", sep="\t", index=False)
+        term_col = "Term" if "Term" in tab.columns else tab.columns[0]
+        foc = tab[tab[term_col].str.contains(focus, regex=True, na=False)]
+        print(f"[{prefix} {tag}] ranked {len(rnk)} | 총 {len(tab)} | 관련 {len(foc)}행")
 
 
 def run_hallmark():
-    try:
-        import gseapy as gp
-    except Exception:
-        print("[Hallmark] TODO: gseapy 미설치 → 'pip install gseapy' 후 실행."); return
-    for tag in ["Late_vs_Early", "Late_vs_Control", "Early_vs_Control"]:
-        f = config.RES_DIR / f"DEG_all_{tag}.txt"
-        if not f.exists():
-            print(f"[Hallmark {tag}] DEG 없음 → STEP1 02_deg 먼저: {f}"); continue
-        deg = pd.read_csv(f, sep="\t")
-        rnk = deg[["id", "logFC"]].dropna().sort_values("logFC", ascending=False)
-        res = gp.prerank(rnk=rnk, gene_sets=str(HALLMARK_GMT), min_size=5, max_size=1000,
-                         permutation_num=1000, seed=123, outdir=None, no_plot=True)
-        tab = res.res2d
-        tab.to_csv(OUT / f"Hallmark.GSEA.{tag}.txt", sep="\t", index=False)
-        term_col = "Term" if "Term" in tab.columns else tab.columns[0]
-        foc = tab[tab[term_col].str.contains(FOCUS, regex=True, na=False)]
-        print(f"[Hallmark {tag}] 총 {len(tab)} | FN1/ALDH2 관련 {len(foc)}행 저장")
+    _run_gsea(HALLMARK_GMT, "Hallmark", FOCUS)
+
+
+def run_kegg_gsea():
+    """원본 GSEA.R 대응(신규): 동일 diff_ DEG 를 KEGG gmt 로 GSEA."""
+    _run_gsea(KEGG_GMT, "KEGG", KFOCUS)
 
 
 def run_kegg_ssgsea():
@@ -74,7 +91,8 @@ def run_kegg_ssgsea():
 
 def main():
     run_hallmark()
-    run_kegg_ssgsea()
+    run_kegg_gsea()       # 원본 GSEA.R 대응(신규)
+    run_kegg_ssgsea()     # 논문 Fig2H,I
 
 
 if __name__ == "__main__":

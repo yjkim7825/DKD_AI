@@ -1,0 +1,6 @@
+"metric","paper","ours","diff"
+"GSE142025 Late_vs_Early DEG(total)",2833,3314,481
+"  up",1557,1755,198
+"  down",1276,1559,283
+"GSE142025 Late_vs_Control DEG(total)",NA,4022,NA
+"GSE142025 Early_vs_Control DEG(total)",NA,671,NA

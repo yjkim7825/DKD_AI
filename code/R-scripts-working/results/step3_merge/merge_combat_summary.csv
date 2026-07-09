@@ -1,0 +1,5 @@
+"set","datasets","genes","samples","control","dkd","batches","combat","FN1_mean","ALDH2_mean","log2_min","log2_max"
+"data.train.paper","GSE96804",33720,61,20,41,1,FALSE,7.466,8.33,1.79,13.08
+"data.valid.paper","GSE104948+GSE104954",12042,71,42,29,2,TRUE,6.635,11.893,2.37,14.6
+"data.train","GSE96804+GSE104948",11302,94,41,53,2,TRUE,7.458,9.752,2.28,13.87
+"data.test","GSE104954+GSE30529",11988,60,33,27,2,TRUE,6.505,11.568,2.73,14.61

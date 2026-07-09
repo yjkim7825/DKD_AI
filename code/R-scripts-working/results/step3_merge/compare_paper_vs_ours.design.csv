@@ -1,0 +1,5 @@
+"metric","paper","ours","match"
+"valid(paper) Control",42,42,TRUE
+"valid(paper) DKD",29,29,TRUE
+"valid(paper) total",71,71,TRUE
+"train(paper) samples",61,61,TRUE

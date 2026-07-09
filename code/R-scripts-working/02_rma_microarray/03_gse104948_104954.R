@@ -7,7 +7,9 @@
 #   방식  : 플랫폼별로 make.cdf.env + affy::rma -> Entrez(_at) 레벨 발현
 #           -> 두 플랫폼을 공통 Entrez 교집합으로 cbind 병합
 #           -> Entrez -> SYMBOL(org.Hs.eg.db) -> avereps
-#   샘플  : 파일명 질환코드에서 DN=DKD, LD/TN=Control 만 사용(그 외 질환 제외)
+#   샘플  : 파일명 질환코드에서 DN=DKD, LD=Control 만 사용(그 외 질환 제외)
+#           ※ TN(tumor nephrectomy 정상부)은 제외 — 논문 Supp Table 1 Control=21 = LD(21) 정확 일치
+#             (2026-07-09 정렬: 이전엔 LD+TN=26 이었음. 근거는 DECISIONS STEP2 참조)
 #   출력  : ../data/processed/GSE104948.labeled.txt , GSE104954.labeled.txt
 # 원본 저장소에 CEL->RMA 단계 없음 — 마이크로어레이 관례로 새로 구현.
 # 주의: CDF .gz 는 원본을 수정하지 않고 scratchpad 로 gunzip 복사 후 사용.
@@ -62,7 +64,7 @@ dcode_of <- function(file) {
 }
 gsm_of <- function(file) sub("^(GSM[0-9]+).*", "\\1", basename(file))
 
-process_gse <- function(gseDir, gseId, keepCodes = c("DN", "LD", "TN")) {
+process_gse <- function(gseDir, gseId, keepCodes = c("DN", "LD")) {   # TN 제외(논문 Control=21=LD)
   message("\n===== ", gseId, " =====")
   cel <- list.files(gseDir, pattern = "\\.CEL\\.gz$", full.names = TRUE)
   dcode <- dcode_of(cel)
@@ -105,7 +107,7 @@ process_gse <- function(gseDir, gseId, keepCodes = c("DN", "LD", "TN")) {
   exprSym <- avereps(merged, ID = sym)
   message("[", gseId, "] 유니크 심볼: ", nrow(exprSym), " x ", ncol(exprSym), " 샘플")
 
-  # 그룹: DN -> DKD, LD/TN -> Control
+  # 그룹: DN -> DKD, LD -> Control (TN 은 keepCodes 에서 이미 제외)
   gsmAll <- gsm_of(cel)
   codeByGsm <- setNames(dcode, gsmAll)
   grp <- ifelse(codeByGsm[colnames(exprSym)] == "DN", GROUP_DKD, GROUP_CONTROL)

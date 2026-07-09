@@ -26,32 +26,33 @@ rows = []
 def add(cat, metric, py, r, paper, note=""):
     rows.append({"category": cat, "metric": metric, "Python": py, "R": r, "Paper": paper, "note": note})
 
-# ===== STEP1 DEG 개수 =====
+# ===== STEP1 DEG 개수 (검증셋 LD-only 정렬과 무관) =====
 add("STEP1_DEG", "Late_vs_Early (유의 DEG 수)", 3460, 3314, 2833, "Welch t(파이썬) vs eBayes(R); 방향·비율 일치")
 add("STEP1_DEG", "Late_vs_Control (유의 DEG 수)", 4096, 4022, "n/a", "논문 미보고")
 add("STEP1_DEG", "Early_vs_Control (유의 DEG 수)", 473, 671, "n/a", "논문 미보고")
+add("STEP1_DEG", "GSE96804 DKD vs Control (유의)", 654, 654, "n/a", "신규(논문 complementary DEG). FN1=Up/ALDH2=저발현방향")
 
-# ===== STEP4 단일유전자 ROC-AUC =====
+# ===== STEP4 단일유전자 ROC-AUC (검증 = LD-only 71샘플) =====
 add("STEP4_single", "FN1  AUC_train",  P_sg("FN1","AUC_train"),  0.909, 0.911, "Python=R 정확 일치")
-add("STEP4_single", "FN1  AUC_valid",  P_sg("FN1","AUC_valid"),  0.915, 0.911, "Python=R 정확 일치")
+add("STEP4_single", "FN1  AUC_valid",  P_sg("FN1","AUC_valid"),  0.871, 0.911, "Python=R (검증 71); 논문과 근사")
 add("STEP4_single", "ALDH2 AUC_train", P_sg("ALDH2","AUC_train"),0.940, 0.912, "Python=R 정확 일치")
-add("STEP4_single", "ALDH2 AUC_valid", P_sg("ALDH2","AUC_valid"),0.784, 0.815, "Python=R 정확 일치, 논문과 근사")
+add("STEP4_single", "ALDH2 AUC_valid", P_sg("ALDH2","AUC_valid"),0.807, 0.815, "Python=R; LD-only로 논문(0.815)에 근접")
 
-# ===== STEP4 결합모델(FN1+ALDH2) AUC =====
+# ===== STEP4 결합모델(FN1+ALDH2) AUC (검증 71) =====
 add("STEP4_combined", "GLM  AUC_train",  P_cm("GLM","AUC_train"),  0.980, 0.978, "")
-add("STEP4_combined", "GLM  AUC_valid",  P_cm("GLM","AUC_valid"),  0.826, 0.942, "Python(0.926)이 R(0.826)보다 논문(0.942)에 근접")
+add("STEP4_combined", "GLM  AUC_valid",  P_cm("GLM","AUC_valid"),  0.820, 0.942, "Python(0.953)이 R(0.820)보다 논문(0.942)에 근접")
 add("STEP4_combined", "RF   AUC_train",  P_cm("RF","AUC_train"),   1.000, 1.000, "")
-add("STEP4_combined", "RF   AUC_valid",  P_cm("RF","AUC_valid"),   0.914, 0.815, "Python≈R")
+add("STEP4_combined", "RF   AUC_valid",  P_cm("RF","AUC_valid"),   0.927, 0.815, "Python=R (0.927)")
 add("STEP4_combined", "SVM  AUC_train",  P_cm("SVM","AUC_train"),  0.973, 0.977, "")
-add("STEP4_combined", "SVM  AUC_valid",  P_cm("SVM","AUC_valid"),  0.785, 0.807, "sklearn SVC(rbf,gamma=scale)≠e1071 → 검증 갭(포팅 한계)")
+add("STEP4_combined", "SVM  AUC_valid",  P_cm("SVM","AUC_valid"),  0.800, 0.807, "sklearn SVC(rbf,gamma=scale)≠e1071 → 검증 갭(포팅 한계)")
 add("STEP4_combined", "XGB  AUC_train",  P_cm("XGBoost","AUC_train"),0.997,0.999, "")
-add("STEP4_combined", "XGB  AUC_valid",  P_cm("XGBoost","AUC_valid"),0.873,0.844, "Python≈R")
+add("STEP4_combined", "XGB  AUC_valid",  P_cm("XGBoost","AUC_valid"),0.898,0.844, "Python≈R")
 
 # ===== STEP4 유전자 선택 (FN1/ALDH2 포함 여부) =====
-add("STEP4_select", "LASSO 선택수",        5, 6, 6, "Py{ALDH2,CREB5,FN1,IFI44L,VNN2} / R{+XAF1,CDKN1B} / 논문{+XAF1,CDKN1B,TSPYL5}")
+add("STEP4_select", "LASSO 선택수",        5, 6, 6, "Py{ALDH2,CREB5,FN1,IFI44L,VNN2} / R{ALDH2,CDKN1B,FN1,IFI44L,VNN2,XAF1} / 논문6")
 add("STEP4_select", "FN1  ∈ LASSO",        "Yes", "Yes", "Yes", "3자 모두 FN1 선택")
 add("STEP4_select", "ALDH2 ∈ LASSO",       "Yes", "Yes", "Yes", "3자 모두 ALDH2 선택")
-add("STEP4_select", "LASSO∩SVM-RFE",       "ALDH2,VNN2", "LASSO 6 (교집합 파일 공란)", "FN1,ALDH2(최종)", "Py SVM-RFE(RFECV)가 FN1 탈락; 단일 ROC 로는 FN1 최상위")
+add("STEP4_select", "LASSO∩SVM-RFE",       "ALDH2,VNN2", "CDKN1B,VNN2", "ROC AUC>0.8:{ALDH2,FN1,CA2}", "코드 교집합엔 FN1 미포함; 논문 방법(ROC>0.8)이 FN1/ALDH2 선택")
 
 # ===== STEP5 GSEA/ssGSEA (Python 결과 파일에서 읽음) =====
 def hallmark_nes(tag, term):
@@ -80,14 +81,16 @@ else:
 # ===== STEP6 MR (Python GCST 결과에서 읽음) =====
 mr_f = RES / "step6_mr" / "table.MRresult.GCST.csv"
 if mr_f.exists():
-    mm = pd.read_csv(mr_f).set_index("exposure")
+    mm = pd.read_csv(mr_f)
+    mm = mm[mm["method"] == "Inverse variance weighted"].set_index("exposure")   # IVW 행만
     add("STEP6_MR", "FN1 IVW b (GCST)",  round(float(mm.loc["FN1","b"]),3),  1.021,  1.021, "Python=R=Supp9 일치")
     add("STEP6_MR", "FN1 IVW OR (GCST)", round(float(mm.loc["FN1","or"]),3), 2.777, 2.777, f"nsnp {int(mm.loc['FN1','nsnp'])}")
     add("STEP6_MR", "FN1 IVW p (GCST)",  round(float(mm.loc["FN1","pval"]),4), 0.0122, 0.0122, "위험 인과 OR>1")
     add("STEP6_MR", "ALDH2 IVW b (GCST)", round(float(mm.loc["ALDH2","b"]),3), -0.395, -0.395, "보호 인과 OR<1")
-    add("STEP6_MR", "ALDH2 IVW OR (GCST)",round(float(mm.loc["ALDH2","or"]),3),0.673, 0.673, f"nsnp {int(mm.loc['ALDH2','nsnp'])} (R/Supp9=14, Py=15)")
+    add("STEP6_MR", "ALDH2 IVW OR (GCST)",round(float(mm.loc["ALDH2","or"]),3),0.673, 0.673, f"nsnp {int(mm.loc['ALDH2','nsnp'])} (R/Supp9=14, Py=15: palindromic 1개 차)")
     add("STEP6_MR", "ALDH2 IVW p (GCST)", round(float(mm.loc["ALDH2","pval"]),4),0.0321,0.0321, "")
-    add("STEP6_MR", "FinnGen outcome", "미실행", "완료(비유의)", "-", "2.1GB 로드 무거워 스킵(GCST 우선)")
+    add("STEP6_MR", "IVW필터 통과(GCST)", "ALDH2,FN1", "ALDH2,FN1", "ALDH2,FN1", "IVW p<0.05+3방법방향일치+다면발현p>0.05 (R=Python)")
+    add("STEP6_MR", "FinnGen outcome", "완료(비유의)", "완료(비유의)", "-", "FN1/ALDH2 IVW 비유의 → Supp6 정합 (Python도 실행)")
 else:
     add("STEP6_MR", "MR IVW", "미실행", "완료", "-", "데이터 확인 필요")
 
@@ -98,8 +101,8 @@ if sc_f.exists():
     def top_ct(gene):
         h = st7[st7.gene == gene].sort_values("mean_expr", ascending=False)
         return f"{h.iloc[0]['celltype']} ({h.iloc[0]['mean_expr']:.2f})" if len(h) else "n/a"
-    add("STEP7_scRNA", "FN1 최고발현 세포", top_ct("FN1"),  "Endothelial (1.72)", "내피/메산지움", "3자 방향 일치 여부")
-    add("STEP7_scRNA", "ALDH2 최고발현 세포", top_ct("ALDH2"),"PCT (1.65)", "근위세뇨관", "3자 방향 일치 여부")
+    add("STEP7_scRNA", "FN1 최고발현 세포", top_ct("FN1"),  "Endothelial (1.71)", "내피/메산지움", "3자 방향 일치 (R res=0.2)")
+    add("STEP7_scRNA", "ALDH2 최고발현 세포", top_ct("ALDH2"),"PCT (1.53)", "근위세뇨관", "3자 방향 일치 (R res=0.2)")
 else:
     add("STEP7_scRNA", "세포유형별 발현", "미실행", "완료", "-", "scanpy 실행 실패/미완")
 

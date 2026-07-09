@@ -19,8 +19,10 @@ Python-scripts-working/DKD_AI/
 .scratch/
 figures/
 
-# ===== 개인문서 · 논문 PDF (scope 제외) =====
+# ===== 개인문서 · 논문 PDF · 발표자료 (scope 제외) =====
 /docs/
+*.pptx
+*.docx
 
 # ===== 잡파일 =====
 .DS_Store

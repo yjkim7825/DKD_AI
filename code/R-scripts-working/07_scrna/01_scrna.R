@@ -42,23 +42,30 @@ sc <- subset(sc, subset = nFeature_RNA > 300 & nFeature_RNA < 5000 & percent.mt 
 message("[QC] 필터 후 세포: ", ncol(sc), " | 샘플별: ",
         paste(names(table(sc$orig.ident)), table(sc$orig.ident), sep="=", collapse=", "))
 
-## ---- 3) 표준 전처리 + Harmony 통합 (체크포인트: 무거운 계산 1회만) ----
-CKPT <- file.path(SCR, "GSE209781_processed.rds")
+## ---- 3) 표준 전처리 + Harmony 통합 (체크포인트: 무거운 PCA/Harmony 1회만) ----
+# 원본 scRNA.Seurat0.7.R 와 동일: LogNormalize(1e4) → vst 2000 → ScaleData → PCA30 → Harmony → dims 1:30.
+# 원본은 Harmony 변수 "patient"(Control/DKD 2군), FindClusters resolution=0.2. 우리는:
+#   · Harmony 변수 = orig.ident(6샘플 단위) — 표준 배치보정(원본 group단위보다 세분, DIFF 기록)
+#   · resolution = 0.2 로 원본과 정렬.
+RES  <- 0.2                                   # 원본과 동일
+PCSEL <- 30
+CKPT <- file.path(SCR, "GSE209781_harmony.rds")   # Harmony 까지만 캐시(클러스터링 전)
 if (file.exists(CKPT)) {
-  sc <- readRDS(CKPT); message("[ckpt] 전처리 결과 로드")
+  sc <- readRDS(CKPT); message("[ckpt] Harmony 전처리 결과 로드")
 } else {
   sc <- NormalizeData(sc, normalization.method = "LogNormalize", scale.factor = 1e4)
   sc <- FindVariableFeatures(sc, selection.method = "vst", nfeatures = 2000)
   sc <- ScaleData(sc, verbose = FALSE)
-  sc <- RunPCA(sc, npcs = 30, verbose = FALSE)
+  sc <- RunPCA(sc, npcs = PCSEL, verbose = FALSE)
   sc <- RunHarmony(sc, group.by.vars = "orig.ident", verbose = FALSE)
-  sc <- FindNeighbors(sc, reduction = "harmony", dims = 1:30, verbose = FALSE)
-  sc <- FindClusters(sc, resolution = 0.5, verbose = FALSE)
-  sc <- RunUMAP(sc, reduction = "harmony", dims = 1:30, verbose = FALSE)
   sc <- JoinLayers(sc)             # v5: 마커/발현 계산 위해 레이어 병합
   saveRDS(sc, CKPT)
 }
-message("[cluster] 클러스터 수: ", length(levels(sc$seurat_clusters)))
+# 클러스터링/UMAP (원본 resolution=0.2)
+sc <- FindNeighbors(sc, reduction = "harmony", dims = 1:PCSEL, verbose = FALSE)
+sc <- FindClusters(sc, resolution = RES, verbose = FALSE)
+sc <- RunUMAP(sc, reduction = "harmony", dims = 1:PCSEL, verbose = FALSE)
+message("[cluster] resolution=", RES, " 클러스터 수: ", length(levels(sc$seurat_clusters)))
 
 ## ---- 4) 마커기반 세포주석 (클러스터별 마커세트 평균발현 최대) ----
 markers <- list(
@@ -91,8 +98,22 @@ names(clAssign) <- rownames(score)  # 클러스터ID -> 세포타입
 sc$celltype <- unname(clAssign[as.character(sc$seurat_clusters)])  # unname: 위치기반 대입(바코드 매칭 회피)
 message("[annot] 세포타입 분포:\n")
 print(table(sc$celltype))
-write.csv(data.frame(cluster = names(clAssign), celltype = clAssign),
+write.csv(data.frame(cluster = names(clAssign), celltype = clAssign,
+                     n_cells = as.integer(table(sc$seurat_clusters)[names(clAssign)])),
           file.path(OUT, "cluster_annotation.csv"), row.names = FALSE)
+# 마커 점수 행렬(클러스터 x 세포타입) 저장 — 주석 근거
+write.csv(cbind(cluster = rownames(score), round(as.data.frame(score), 3)),
+          file.path(OUT, "cluster_marker_scores.csv"), row.names = FALSE)
+
+# FindAllMarkers (원본 scRNA.Seurat0.7.R 와 동일 인자) → 클러스터별 top 마커
+allmk <- tryCatch(FindAllMarkers(sc, min.pct = 0.25, logfc.threshold = 0.5, only.pos = TRUE, verbose = FALSE),
+                  error = function(e) { message("[FindAllMarkers 실패] ", conditionMessage(e)); NULL })
+if (!is.null(allmk) && nrow(allmk)) {
+  topmk <- allmk %>% dplyr::filter(p_val_adj < 0.05) %>% dplyr::group_by(cluster) %>%
+    dplyr::slice_max(avg_log2FC, n = 20)
+  write.csv(topmk, file.path(OUT, "cluster_markers_top20.csv"), row.names = FALSE)
+  message("[markers] 클러스터별 top20 마커 저장")
+}
 
 ## ---- 5) 핵심: FN1/ALDH2 세포유형별 발현 ----
 genes <- c("FN1","ALDH2")
@@ -111,6 +132,21 @@ for (g in present) {
   top <- tab[tab$gene == g, ][1, ]
   cat(sprintf(">> %s 최고발현 세포유형: %s (mean=%.3f, %%expr=%.1f)\n", g, top$celltype, top$mean_expr, top$pct_expressing))
 }
+
+## 논문 대조 CSV: 논문 scRNA — FN1 = 내피/系膜/손상PCT, ALDH2 = PCT(근위세뇨관)
+paper_loc <- c(FN1 = "Endothelial/Mesangial/injured-PCT", ALDH2 = "PCT")
+cmp7 <- do.call(rbind, lapply(present, function(g) {
+  top <- tab[tab$gene == g, ][1, ]
+  data.frame(gene = g, paper_top_celltype = paper_loc[[g]],
+             ours_top_celltype = top$celltype,
+             ours_mean = top$mean_expr, ours_pct = top$pct_expressing,
+             consistent = grepl(top$celltype, paper_loc[[g]], ignore.case = TRUE) |
+                          (g == "ALDH2" & top$celltype == "PCT") |
+                          (g == "FN1" & top$celltype %in% c("Endothelial","Mesangial","PCT")),
+             row.names = NULL)
+}))
+write.csv(cmp7, file.path(OUT, "compare_paper_vs_ours.scRNA.csv"), row.names = FALSE)
+cat("\n== 논문 대조 (FN1/ALDH2 세포국소화) ==\n"); print(cmp7, row.names = FALSE)
 
 ## ---- 6) 그림 ----
 Idents(sc) <- "celltype"

@@ -30,6 +30,24 @@
 - GSEA(STEP 5)에서 Late_vs_Early 순위 리스트를 쓸 때 이 차이를 다시 확인.
 - 필요 시 정공법: GEO 원본 `GSE142025_matrix.txt` 확보 후 재대조, 또는 voom 경로 비교.
 
+### 논문 정렬 패스 (2026-07-09) — 산출물 재정리 + 누락 DEG 추가
+- **출력 정리**: STEP1 산출물을 `results/` 루트 → **`results/step1_deg/`** 로 이동(STEP 구분 저장 규칙). 구 루트 파일 삭제.
+  STEP5(`05_gsea/01_gsea.R`)가 이 DEG 를 읽으므로 읽기 경로도 `step1_deg/` 로 동기화.
+- **논문값 대조 CSV 추가**: `step1_deg/compare_paper_vs_ours.GSE142025.csv`
+  (논문 Late_vs_Early 2,833/up1557/down1276 vs 우리 3,314/up1755/down1559).
+- **누락 DEG 추가(논문 명시)**: `03_gse96804_deg.R` — 논문 Methods(p.4) *"Complementary differential expression
+  analysis of the GSE96804 dataset using limma (v3.64.1), adjusted p<0.05, |logFC|>0.585"* 를 그대로 구현.
+  이 DEG 가 MR 통합(DKD 고발현∩risk / 저발현∩protective)의 근거이며 FN1/ALDH2 방향을 정의함.
+  - 결과: **GSE96804 DKD vs Control DEG 654개(up 336/down 318)**.
+  - **FN1: logFC +2.10, adjP 8.3e-8 → DKD 고발현(Up)** = 논문 "FN1 = DKD 고발현·MR risk" 방향 정확 일치.
+  - **ALDH2: logFC −0.42, adjP 6.6e-6 → 저발현 방향이나 |logFC|<0.585 컷 미달**(이 데이터셋 한정).
+    방향(DKD 저발현·protective)은 논문과 일치하나 GSE96804 단독에선 유의컷 경계 아래 — 정직 기록.
+    (논문 최종 후보는 저자 명시 10개를 사용하므로 STEP4 에 영향 없음.)
+  - 산출: `step1_deg/DEG_{all,diff}_GSE96804_DKD_vs_Control.txt`, `GSE96804.DKD_{high,low}_genes.txt`,
+    `GSE96804.FN1_ALDH2_direction.csv`, `vol_GSE96804_DKD_vs_Control.pdf`.
+- **논문과 불가피한 차이(강제 정렬 안 함)**: GSE142025 입력이 GEO 단일 matrix 가 아니라 36개 per-sample txt 병합
+  → Late_vs_Early 3,314 vs 논문 2,833(70% 겹침). 위 "차이 원인 가설" 그대로 유지.
+
 ---
 
 ## STEP 2 — CEL → RMA 발현매트릭스 (진행 중)
@@ -68,11 +86,13 @@
   paper/GEO 관례상 GSE 단위 1파일로 처리했고, STEP 3 ComBat 은 데이터셋(파일) 단위 배치만 교정.
   ROC(STEP 4)가 이상하면 여기서 플랫폼을 별도 배치로 분리하거나 ComBat 공변량 추가 검토.
 
-### ⚠️ 미해결 이슈 (STEP 4 ROC 이상 시 재검토)
-1. **GSE104948/54 Control 수 불일치: 우리 26 vs 논문 21.**
-   - 우리는 대조군 = **LD(21) + TN(5) = 26**. 논문은 **21**로 보고 → 논문은 **LD(living donor)만** 대조로 쓰고
-     **TN(tumor nephrectomy 정상부)은 제외**했을 가능성이 큼(LD/TN 정의 차이 추정).
-   - 현재는 LD+TN 둘 다 Control 로 두고 진행. STEP 4 ROC 가 이상하면 **TN 제외(LD만 대조)로 재실행** 검토.
+### ✅ 미해결 이슈 #1 해소 (2026-07-09) — Control = LD only
+1. **GSE104948/54 Control 수: 논문 Supp1 = 21 = LD(21) 정확 일치로 정렬 완료.**
+   - 데이터 카운트: 104948 = DN 12 / **LD 21** / TN 5, 104954 = DN 17 / **LD 21** / TN 5.
+   - **LD(living donor)만 = 21 = 논문 Supp Table 1 Control 수와 정확 일치.** TN(tumor nephrectomy 정상부, 5개)은
+     논문이 제외한 것으로 확정 → `03_gse104948_104954.R` `keepCodes=c("DN","LD")` 로 정렬(TN 제외).
+   - 재실행 결과: **GSE104948 C21/D12(33) , GSE104954 C21/D17(38)** — 논문 Supp1 완전 일치(compare CSV all TRUE).
+   - 저위험(검증셋). 다운스트림(STEP3 병합·data.valid.paper.txt)은 이 21-Control 매트릭스로 재생성.
 2. **GSE 내부 U133A + Plus2 배치효과 미교정.**
    - 한 GSE 안 두 플랫폼을 RMA 후 cbind 만 함. STEP 3 ComBat 은 데이터셋(파일) 단위 배치만 교정 → GSE 내부
      플랫폼 배치는 남음. STEP 4 ROC 이상 시 플랫폼을 별도 배치로 분리하거나 ComBat 공변량 추가 검토.
@@ -80,6 +100,16 @@
 ### STEP 2 종합
 - 산출 4종 완료: GSE96804(33,720×61) / GSE30529(13,041×22) / GSE104948(12,042×38) / GSE104954(12,042×43).
 - 네 매트릭스 모두 log2 스케일·FN1/ALDH2 존재 확인. STEP 3(병합+ComBat) 준비됨.
+
+### 논문/원본 정렬 패스 (2026-07-09)
+- **원본 대조**: 원본엔 CEL→RMA 단계 자체가 없음. 원본 `data preprocessing 1.R` 는 series_matrix + GPL
+  프로브주석(`str_split(" // ")[2]`)→avereps 방식 → **우리 RMA 는 원본 대응 없는 추가분**(제공 데이터=CEL+CDF 라 RMA 가 타당).
+  `results/DIFF_vs_original_code.md` STEP2 행에 "불가피한 차이"로 기록.
+- **QC 중간산출물 저장**(무거운 RMA 재실행 없이 기존 매트릭스에서 요약): `results/step2_rma/`
+  — `RMA_matrix_summary.csv`(차원/그룹/log2/FN1·ALDH2), `RMA_sample_distribution.csv`(샘플별 Q1/median/Q3),
+  `compare_paper_vs_ours.samples.csv`(논문 Supp1 표본수 대조).
+- **표본수 대조**: 96804(C20/D41)·30529(C12/D10) 논문 정확 일치. 104948/54 는 DKD 일치, Control 26 vs 논문 21
+  (LD+TN vs LD만 — 미해결 #1 유지, 강제 정렬 안 함).
 
 ---
 
@@ -109,6 +139,18 @@
 - STEP 2 의 GSE 내부 플랫폼 배치효과(104948/54)는 여기서 교정되지 않음(위 미해결 이슈 2 참조).
 - 훈련은 사구체 2종, 검증은 세뇨관 2종 → 조직 차이가 곧 train/test 도메인 차이. ROC 가 검증에서 크게
   떨어지면 조직 차이/배치 재검토(STEP 4).
+
+### 논문/원본 정렬 패스 (2026-07-09) — 설계 통일 + 중간산출물
+- **병합·ComBat 로직**: 원본 `data preprocessing 3.R` 와 **완전일치**(교집합→접두사 cbind→batch=데이터셋→
+  `ComBat(par.prior=TRUE)`→preNorm/txt). 우리 추가분은 배치 내 무분산 유전자 제거 가드(이번 제거 0).
+- **훈련/검증 구성 = 논문 Figure4 로 통일**(정본): 훈련=GSE96804 단독 / 검증=ComBat(104948+104954).
+  원본 ML 은 data.train/test.txt(사구체 vs 세뇨관)를 쓰지만 **논문 Figure4 를 채택**(사용자 지시). 원본 네이밍
+  호환용 data.train/test.txt 도 병행 생성(참고).
+- **LD-only 반영으로 검증셋 재생성**: `data.valid.paper.txt` = Control 42 / DKD 29 / **71 샘플**
+  (이전 26-Control 시절 81 → 21-Control 로 71). 논문 대조 CSV all TRUE.
+- **중간산출물** → `results/step3_merge/`: `merge_combat_summary.csv`(4세트 차원/그룹/ComBat여부/FN1·ALDH2),
+  `sample_median_pre_post_ComBat.csv`(샘플별 ComBat 전후 중앙값), `compare_paper_vs_ours.design.csv`(설계 대조).
+- 산출 매트릭스: `processed/` 에 data.train.paper(=GSE96804,ComBat생략)/data.valid.paper/data.train/data.test (+ *.preNorm).
 
 ---
 
@@ -207,6 +249,23 @@
 - ALDH2·결합 GLM 의 검증 성능 갭 → (미해결 #1 Control 정의, #2 GSE 내부 플랫폼 배치) 및 검증 전처리와 연관 가능.
   사용자 지시로 원인 심층 규명은 보류, 한계로만 기록.
 
+### 논문/원본 정렬 패스 (2026-07-09) — 원본 ML 코드 1:1 반영 + LD-only 재실행
+- **입력 정리**: STEP4 가 검증셋을 자체 재생성하던 것을 **STEP3 산출물 `data.valid.paper.txt`(71) 를 읽도록** 변경(단일 소스).
+  훈련=GSE96804(61). LD-only 정렬로 검증 81→71.
+- **원본 ML 코드 반영(누락분 추가)**: 기존 paper 스크립트에 없던 **SVM-RFE + Venn 교집합 + ci.auc(bootstrap) CI** 를
+  원본 `machine learning modeling 1·2.R` 그대로 추가.
+  - LASSO: 원본과 **완전일치**(glmnet+cv.glmnet, deviance, nfolds10, lambda.min, seed123) → 6개 {ALDH2,CDKN1B,FN1,IFI44L,VNN2,XAF1}.
+  - SVM-RFE: 원본과 동일(caretFuncs/cv/sizes2-8/center·scale), 원본 오타 `methods=`→`method=` 정렬 → {CA2,CDKN1B,VNN2}.
+  - **교집합(SVM-RFE∩LASSO) = {CDKN1B,VNN2} → FN1/ALDH2 미포함**(원본 코드 방식의 특성).
+- **논문 vs 원본코드 차이(중요)**: 논문 본문은 *"LASSO→ROC AUC>0.8(train&valid 모두)→multivariate"* 방법 →
+  우리 계산 **AUC>0.8 통과 = {ALDH2, FN1, CA2}** 로 **FN1·ALDH2 를 정확히 선택**. 즉 **FN1/ALDH2 는 논문의
+  ROC-필터 방법에서 선택되며, 코드의 SVM-RFE 교집합에서는 아님**. 둘 다 산출하고 논문 방법을 정본으로 채택.
+- **LD-only 재실행 효과**: ALDH2 검증 AUC **0.784→0.807**(논문 0.815 에 근접), FN1 검증 0.915→0.871,
+  결합 GLM valid 0.826→0.820(RF 0.927/XGB 0.898). 단일유전자 CI 도 재계산.
+- **중간산출물**(`results/step4_paper/`): interGenes.List.txt(후보10), LASSO.gene.txt, SVM-RFE.gene.txt,
+  interGenes.txt(교집합), single_gene_ROC_withCI.csv(10유전자 AUC+95%CI), single_gene_ROC_AUC.csv,
+  genes_AUC_over_0.8_both.txt, combined_model_AUC.csv, compare_paper_vs_ours.AUC.csv, ROC PDF 6종, ROC_figures_index.csv.
+
 ### STEP 4 최종 확정 (2026-07-07)
 - **STEP 4 는 논문 본문 설계 재현으로 확정**: FN1 단일 ROC 재현(0.909/0.915 ≈ 논문 0.911/0.911),
   ALDH2 근사(0.940/0.784 ≈ 0.912/0.815), LASSO 5/6 일치.
@@ -241,6 +300,15 @@
 - 논문은 손상PCT(dPCT)에서도 FN1 상향 언급 — 본 주석은 PCT 단일 군집으로 병합. 세분화는 추가 작업 필요.
 - GSE131882/266146 미처리(포맷 상이). 필요 시 별도 진행.
 
+### 논문/원본 정렬 패스 (2026-07-09) — 원본 scRNA.Seurat0.7.R 반영
+- **해상도 정렬**: `FindClusters(resolution 0.5→0.2)` 로 원본과 동일. → 18,817 세포, **15 클러스터**.
+- **Harmony 변수**: 원본은 `RunHarmony("patient")`(Control/DKD 2군), 우리는 `orig.ident`(6샘플) 유지 —
+  샘플단위 배치보정(표준, 원본 group단위보다 세분). FN1/ALDH2 국소화 결론 무관 → DIFF "의도적 차이" 기록.
+- **중간산출물 추가**: `cluster_marker_scores.csv`(주석 근거 점수행렬), `cluster_markers_top20.csv`(FindAllMarkers
+  min.pct0.25/logfc0.5/only.pos = 원본 인자), `compare_paper_vs_ours.scRNA.csv`.
+- **결과(res 0.2)**: **FN1 = Endothelial(mean 1.713, 73.8%)**, **ALDH2 = PCT(mean 1.533, 75.9%)** →
+  논문(내피/系膜_FN1, PCT_ALDH2) 정합. res 0.5 결과(FN1 1.721/ALDH2 1.648)와 거의 동일 — 결론 견고.
+
 ---
 
 ## STEP 6 — 2-표본 MR (2026-07-08, 완료) — `13_step6_mr.R`
@@ -269,6 +337,17 @@
 - LD clumping 을 저자 도구변수(Supp8)로 대체(오프라인 제약). 독립 clumping 은 미수행 → 저자 instrument 에 의존.
   단 결과가 Supp9 와 정확히 일치하므로 재현 목적상 타당.
 - FinnGen 은 전체 파일 fread(2.1GB, 필요열만) — 메모리 사용 큼(1회성, 정상 완료).
+
+### 논문/원본 정렬 패스 (2026-07-09) — 원본 MR1·2.R 누락분 반영
+- **outcome 필터 추가**: 원본 `Mendelian randomization 1.R` 의 `dat[dat$pval.outcome>5e-06,]`(역인과 방지)를 추가(NA 가드).
+  적용 후에도 **GCST FN1 nsnp3 / ALDH2 nsnp14 = Supp9 유지**.
+- **IVW 필터 추가(원본 MR2.R)**: IVW p<0.05 & 3방법 OR방향 일치 & 다면발현 p>0.05 →
+  **FinnGen 통과 0**(FN1/ALDH2 비유의 = Supp6 정합), **GCST 통과 {ALDH2, FN1}** → `IVW.filter.GCST.csv`.
+- **민감도 추가(원본 MR1.R)**: `mr_singlesnp` + `mr_leaveoneout` 표 저장(무거운 PDF plot 은 생략).
+- **Supp9 대조 CSV**: `compare_paper_vs_ours.MR_IVW.csv` — FN1 b=1.0212/nsnp3, ALDH2 b=−0.3954/nsnp14 **소수점 일치**.
+- 다면발현: FN1 절편 p=0.99, ALDH2 p=0.70(수평 다면발현 없음).
+- 중간산출물(`results/step6_mr/`): exposure, table.SNP/MRresult/heterogeneity/pleiotropy/singleSNP/leaveoneout × FinnGen·GCST,
+  IVW.filter.GCST.csv, compare_paper_vs_ours.MR_IVW.csv.
 
 ---
 
@@ -306,3 +385,13 @@ FN1/ALDH2 관련 경로 방향·유의성:
 ### 요약
 - **FN1 축 = EMT/ECM(섬유화)**, **ALDH2 축 = 미토콘드리아 산화적 인산화/대사** — 둘 다 유의하게 재현.
 - 원본 대비 차이: gmt 파일 사용(msigdbr 아님), GSEA p<1e-10 은 eps 기본값이라 하한 클리핑(정밀도 경고, 결론 무관).
+
+### 논문/원본 정렬 패스 (2026-07-09) — 원본 GSEA.R/hallmark.gsea.R 1:1 반영
+- **Hallmark GSEA 입력 정렬**: 원본 `hallmark.gsea.R` 는 **diff_(유의 DEG)** logFC 를 GSEA 함 → 우리도 all_→**diff_ 로 변경**.
+  결과 EMT +2.78/+2.53(논문 +2.52/+2.59), OXPHOS -1.71/-1.82(-1.62/-2.02) — 부호·크기 근접 유지.
+- **KEGG GSEA 추가(누락분)**: 원본 `GSEA.R`(KEGG GSEA on diff_ DEG)을 그대로 구현 →
+  Late_vs_Early ECM_RECEPTOR +1.95(p.adj 9e-4), TCA -1.58/OXPHOS -1.48 하향. (이전엔 ssGSEA 만 있었음.)
+- **ssGSEA 유지**: 원본 GSEA.R 은 KEGG **GSEA** 이고 ssGSEA 스크립트는 미제공 → ssGSEA(GSVA)+FN1/ALDH2 상관은
+  **논문 Fig2H,I 방법**으로 유지(원본 코드 대응 없음). FN1↔ECM 0.919, ALDH2↔TCA 0.921 재현.
+- **중간산출물**(`results/step5_gsea/`): Hallmark.GSEA.*(3), KEGG.GSEA.*(3), Hallmark_focus/KEGG.GSEA_focus,
+  compare_paper_vs_ours.Hallmark_NES.csv, KEGG.ssGSEA.*(scores/DKDvsControl/FN1_ALDH2_corr).
