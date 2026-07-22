@@ -1,0 +1,63 @@
+<svg viewBox="0 0 780 600" xmlns="http://www.w3.org/2000/svg" font-family="system-ui, sans-serif">
+<title>경로분석 개념도 — 유전자를 경로(기능) 단위로 해석</title>
+<desc>DEG 목록을 ORA/GSEA/ssGSEA 세 방법으로 경로 단위 해석. EMT·염증·면역 활성. GSE30529 검증.</desc>
+<style>.t{fill:#1a1a1a;} .m{fill:#666;}</style>
+<defs><marker id="ar" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#666"/></marker></defs>
+
+<text x="20" y="30" class="t" font-size="18" font-weight="700">경로분석 — 유전자를 경로(기능) 단위로 해석</text>
+<text x="20" y="52" class="m" font-size="12.5">🎯 목적: 유전자 이름만으론 무슨 병리과정인지 모름 → 경로로 묶어 "어떤 기전이 켜졌나" 해석</text>
+
+<!-- 입력 -->
+<text x="20" y="86" class="t" font-size="13" font-weight="700">⓪ 입력</text>
+<rect x="20" y="98" width="740" height="40" fill="#f0f6ff" stroke="#4575b4" stroke-width="1.5" rx="8"/>
+<text x="35" y="123" class="m" font-size="11.5">DEG 목록(단계별) + 경로 정답지: Hallmark(50) · KEGG(186) — "이 경로 = 이 유전자들" 명단</text>
+
+<!-- 3방법 -->
+<text x="20" y="168" class="t" font-size="13" font-weight="700">방법 — 같은 데이터, 세 관점 (논문 Fig4)</text>
+
+<rect x="20" y="180" width="240" height="128" fill="#f4f4f5" stroke="#d4d4d8" stroke-width="1.5" rx="8"/>
+<text x="140" y="202" text-anchor="middle" class="t" font-size="13" font-weight="700">ORA (C·D·E·G)</text>
+<text x="140" y="222" text-anchor="middle" class="m" font-size="10.5">DEG가 어느 경로에</text>
+<text x="140" y="237" text-anchor="middle" class="m" font-size="10.5">몇 개 몰렸나 (Count)</text>
+<text x="140" y="257" text-anchor="middle" class="m" font-size="10.5">→ 막대그래프 (그룹 판정)</text>
+<line x1="34" y1="270" x2="246" y2="270" stroke="#ddd"/>
+<text x="140" y="286" text-anchor="middle" class="t" font-size="9.5" font-style="italic">예: 말기 DEG 4022개 중</text>
+<text x="140" y="299" text-anchor="middle" class="t" font-size="9.5" font-style="italic">EMT에 111개 걸림 (p&lt;e-20)</text>
+
+<rect x="270" y="180" width="240" height="128" fill="#f4f4f5" stroke="#d4d4d8" stroke-width="1.5" rx="8"/>
+<text x="390" y="202" text-anchor="middle" class="t" font-size="13" font-weight="700">GSEA (F)</text>
+<text x="390" y="222" text-anchor="middle" class="m" font-size="10.5">전체를 logFC로 줄세워</text>
+<text x="390" y="237" text-anchor="middle" class="m" font-size="10.5">경로가 위/아래 몰렸나</text>
+<text x="390" y="257" text-anchor="middle" class="m" font-size="10.5">→ NES (+켜짐/−꺼짐)</text>
+<line x1="284" y1="270" x2="496" y2="270" stroke="#ddd"/>
+<text x="390" y="286" text-anchor="middle" class="t" font-size="9.5" font-style="italic">예: EMT NES +2.79 (켜짐)</text>
+<text x="390" y="299" text-anchor="middle" class="t" font-size="9.5" font-style="italic">TNFA NES −2.40 (꺼짐)</text>
+
+<rect x="520" y="180" width="240" height="128" fill="#f4f4f5" stroke="#d4d4d8" stroke-width="1.5" rx="8"/>
+<text x="640" y="202" text-anchor="middle" class="t" font-size="13" font-weight="700">ssGSEA (H·I)</text>
+<text x="640" y="222" text-anchor="middle" class="m" font-size="10.5">샘플 하나하나에</text>
+<text x="640" y="237" text-anchor="middle" class="m" font-size="10.5">경로 활성점수</text>
+<text x="640" y="257" text-anchor="middle" class="m" font-size="10.5">→ 히트맵 (개체 판정)</text>
+<line x1="534" y1="270" x2="746" y2="270" stroke="#ddd"/>
+<text x="640" y="286" text-anchor="middle" class="t" font-size="9.5" font-style="italic">예: 환자별 EMT 점수 —</text>
+<text x="640" y="299" text-anchor="middle" class="t" font-size="9.5" font-style="italic">정상 낮음 → 말기 높음</text>
+
+<!-- 기준 -->
+<text x="20" y="330" class="t" font-size="13" font-weight="700">② 기준</text>
+<rect x="20" y="340" width="740" height="30" fill="#fff8e1" stroke="#f9a825" stroke-width="1.5" rx="8"/>
+<text x="35" y="360" class="t" font-size="12" font-weight="700">p.adjust &lt; 0.05  (유의 경로만)</text>
+
+<!-- 결과 -->
+<text x="20" y="388" class="t" font-size="13" font-weight="700">③ 결과 — 세 방법 모두 같은 방향</text>
+<rect x="20" y="400" width="740" height="70" fill="#fde8e8" stroke="#d62728" stroke-width="1.5" rx="8"/>
+<text x="35" y="423" class="t" font-size="13" font-weight="700">DKD 진행 = EMT(섬유화) · 염증 · 면역 경로 활성화 ↑</text>
+<text x="35" y="444" class="m" font-size="11.5">말기: ALLOGRAFT·EMT·IFNγ 켜짐 / 초기: TNFA(IEG) 꺼짐 → 진행 스토리</text>
+<text x="35" y="462" class="t" font-size="11.5" fill="#d62728" font-weight="700">FN1이 최상위 EMT 경로에 속함 → 바이오마커 근거</text>
+
+<!-- 검증 -->
+<text x="20" y="502" class="t" font-size="13" font-weight="700">④ 검증</text>
+<rect x="20" y="514" width="740" height="40" fill="#e8f5e9" stroke="#2e7d32" stroke-width="1.5" rx="8"/>
+<text x="35" y="539" class="t" font-size="11.5" font-weight="700">✅ 독립 검증셋 GSE30529서도 동일 경로(IFNγ·EMT) 켜짐 (논문 "validated in GSE30529")</text>
+
+<text x="20" y="584" class="m" font-size="11">한 줄: 같은 DEG를 ORA(개수)·GSEA(방향)·ssGSEA(샘플별)로 봐서 「섬유화·염증」 기전을 확인, 검증셋서도 재현</text>
+</svg>

@@ -1,0 +1,62 @@
+<svg viewBox="0 0 840 430" xmlns="http://www.w3.org/2000/svg" font-family="system-ui, sans-serif">
+<title>장비별로 probe 이름이 다르다</title>
+<desc>같은 유전자라도 측정 장비(플랫폼)에 따라 probe ID 형식이 다르다. 마이크로어레이는 probe→gene 변환이 필요하고, RNA-seq는 이미 유전자 이름이라 변환이 불필요하다.</desc>
+<style>.t{fill:#1a1a1a;} .m{fill:#555;} .w{fill:#fff;} .mono{font-family:"Courier New",monospace;}</style>
+<defs><marker id="ar" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#888"/></marker></defs>
+
+<text x="20" y="30" class="t" font-size="18" font-weight="700">장비(플랫폼)마다 probe 이름이 다르다</text>
+<text x="20" y="52" class="m" font-size="12.5">같은 유전자라도 측정 장비에 따라 코드 형식이 제각각 → 유전자 이름으로 통일해야 비교 가능</text>
+
+<!-- Box 1: HG-U133A2 -->
+<rect x="20" y="72" width="255" height="180" fill="#eef4fb" stroke="#4575b4" stroke-width="1.5" rx="10"/>
+<rect x="20" y="72" width="255" height="34" fill="#4575b4" rx="10"/>
+<rect x="20" y="90" width="255" height="16" fill="#4575b4"/>
+<text x="147" y="94" text-anchor="middle" class="w" font-size="13" font-weight="700">마이크로어레이 · HG-U133A2</text>
+<text x="147" y="122" text-anchor="middle" class="m" font-size="10.5">GSE30529 (세뇨관)</text>
+<text x="40" y="146" class="t mono" font-size="12.5">1007_s_at</text>
+<text x="40" y="167" class="t mono" font-size="12.5">1053_at</text>
+<text x="40" y="188" class="t mono" font-size="12.5">117_at</text>
+<text x="40" y="209" class="t mono" font-size="12.5">1255_g_at</text>
+<text x="147" y="238" text-anchor="middle" class="m" font-size="11">끝이 <tspan class="mono" fill="#4575b4" font-weight="700">_at</tspan> 인 probe ID</text>
+
+<!-- Box 2: HTA-2.0 -->
+<rect x="292" y="72" width="255" height="180" fill="#fdf1e3" stroke="#e08214" stroke-width="1.5" rx="10"/>
+<rect x="292" y="72" width="255" height="34" fill="#e08214" rx="10"/>
+<rect x="292" y="90" width="255" height="16" fill="#e08214"/>
+<text x="419" y="94" text-anchor="middle" class="w" font-size="13" font-weight="700">마이크로어레이 · HTA-2.0</text>
+<text x="419" y="122" text-anchor="middle" class="m" font-size="10.5">GSE96804 (사구체)</text>
+<text x="312" y="146" class="t mono" font-size="12.5">2824546_st</text>
+<text x="312" y="167" class="t mono" font-size="12.5">2824549_st</text>
+<text x="312" y="188" class="t mono" font-size="12.5">2824551_st</text>
+<text x="312" y="209" class="t mono" font-size="12.5">2827992_st</text>
+<text x="419" y="238" text-anchor="middle" class="m" font-size="11">끝이 <tspan class="mono" fill="#e08214" font-weight="700">_st</tspan> 인 다른 형식</text>
+
+<!-- Box 3: RNA-seq -->
+<rect x="564" y="72" width="255" height="180" fill="#e9f5ea" stroke="#2e7d32" stroke-width="1.5" rx="10"/>
+<rect x="564" y="72" width="255" height="34" fill="#2e7d32" rx="10"/>
+<rect x="564" y="90" width="255" height="16" fill="#2e7d32"/>
+<text x="691" y="94" text-anchor="middle" class="w" font-size="13" font-weight="700">RNA-seq</text>
+<text x="691" y="122" text-anchor="middle" class="m" font-size="10.5">GSE142025 (신장)</text>
+<text x="584" y="146" class="t mono" font-size="12.5">A1BG</text>
+<text x="584" y="167" class="t mono" font-size="12.5">A2M</text>
+<text x="584" y="188" class="t mono" font-size="12.5">ALDH2</text>
+<text x="584" y="209" class="t mono" font-size="12.5">FN1</text>
+<text x="691" y="238" text-anchor="middle" class="m" font-size="11">처음부터 <tspan fill="#2e7d32" font-weight="700">유전자 이름</tspan></text>
+
+<!-- arrows down -->
+<line x1="147" y1="256" x2="147" y2="286" stroke="#888" stroke-width="2" marker-end="url(#ar)"/>
+<line x1="419" y1="256" x2="419" y2="286" stroke="#888" stroke-width="2" marker-end="url(#ar)"/>
+<line x1="691" y1="256" x2="691" y2="286" stroke="#888" stroke-width="2" marker-end="url(#ar)"/>
+
+<!-- bottom result -->
+<rect x="20" y="292" width="527" height="52" fill="#fff8ec" stroke="#e08214" stroke-width="1.5" rx="8"/>
+<text x="283" y="314" text-anchor="middle" class="t" font-size="12.5" font-weight="700">매핑표로 probe → 유전자 이름 변환 필요</text>
+<text x="283" y="333" text-anchor="middle" class="m" font-size="11">예: 1007_s_at → DDR1 / 2824546_st → (HTA 매핑) — 장비별 매핑표가 각각 다름</text>
+
+<rect x="564" y="292" width="255" height="52" fill="#eaf6eb" stroke="#2e7d32" stroke-width="1.5" rx="8"/>
+<text x="691" y="314" text-anchor="middle" class="t" font-size="12.5" font-weight="700">변환 불필요</text>
+<text x="691" y="333" text-anchor="middle" class="m" font-size="11">이미 유전자 이름이라 그대로 사용</text>
+
+<text x="20" y="372" class="m" font-size="11.5">→ 그래서 어레이(GSE30529·96804 등)는 <tspan font-weight="700">probe→gene 매핑</tspan> 단계가 있고, RNA-seq(GSE142025)는 이 단계를 건너뛴다.</text>
+<text x="20" y="396" class="m" font-size="11">※ 한 유전자에 probe가 여러 개면 평균(avereps)으로 1행으로 합침 — 어레이만 해당.</text>
+</svg>

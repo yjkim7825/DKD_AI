@@ -1,0 +1,80 @@
+<svg viewBox="0 0 820 860" xmlns="http://www.w3.org/2000/svg" font-family="system-ui, sans-serif">
+<title>ML 진단모델 — 후보 10개에서 최종 2개(FN1·ALDH2)로 좁히고 4모델 비교→GLM 채택 (논문 Figure 4 기준)</title>
+<desc>LASSO(10→6) → ROC AUC>0.8 필터(6→2) → 4개 머신러닝 모델 각각 평가 후 최고(GLM) 채택. 논문 Fig4 흐름. 저자 코드와 차이 표기.</desc>
+<style>
+  .t{fill:#1a1a1a;} .m{fill:#666;} .w{fill:#fff;}
+</style>
+<defs>
+  <marker id="ar" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#666"/></marker>
+  <marker id="ard" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#b0b0b0"/></marker>
+</defs>
+
+<text x="20" y="30" class="t" font-size="18" font-weight="700">머신러닝 — 후보 유전자 10개 → 최종 진단 바이오마커 2개 (FN1·ALDH2)</text>
+<text x="20" y="50" class="m" font-size="11.5">논문 Figure 4 기준 · 학습셋 GSE96804 / 검증셋 GSE104948·104954</text>
+
+<!-- STEP 1 입력 -->
+<text x="20" y="82" class="t" font-size="13" font-weight="700">STEP 1. 입력 — DEG∩MR로 좁힌 후보 유전자 10개 + 발현 데이터 (배치보정 후, Fig 4A PCA)</text>
+<rect x="20" y="94" width="780" height="58" fill="#f0f6ff" stroke="#4575b4" stroke-width="1.5" rx="8"/>
+<rect x="40" y="110" width="150" height="26" fill="#c6dbef" rx="4"/>
+<text x="115" y="128" text-anchor="middle" class="t" font-size="12" font-weight="700">후보 유전자 10개</text>
+<text x="205" y="122" class="m" font-size="11">+</text>
+<rect x="222" y="110" width="230" height="26" fill="#c6dbef" rx="4"/>
+<text x="337" y="128" text-anchor="middle" class="t" font-size="11.5" font-weight="700">발현행렬 (학습셋 / 검증셋)</text>
+<text x="470" y="122" class="m" font-size="10.5">행=유전자, 열=샘플 (Control / DKD 라벨)</text>
+
+<!-- STEP 2 LASSO -->
+<text x="20" y="182" class="t" font-size="13" font-weight="700">STEP 2. LASSO 회귀 (10겹 교차검증, λmin) — 필요없는 유전자 계수를 0으로 → 6개 선택  [Fig 4B]</text>
+<rect x="20" y="194" width="780" height="96" fill="#eef7f0" stroke="#41ab5d" stroke-width="1.5" rx="8"/>
+<text x="40" y="218" class="t" font-size="11.5" font-family="ui-monospace,monospace">cv.glmnet(x, y, family="binomial", alpha=1, nfolds=10) → 계수 ≠ 0 유전자만 유지</text>
+<g font-size="11.5">
+  <rect x="40" y="230" width="118" height="26" fill="#a1d99b" rx="4"/><text x="99" y="248" text-anchor="middle" class="t" font-weight="700">FN1</text>
+  <rect x="166" y="230" width="118" height="26" fill="#a1d99b" rx="4"/><text x="225" y="248" text-anchor="middle" class="t" font-weight="700">ALDH2</text>
+  <rect x="292" y="230" width="118" height="26" fill="#c7e9c0" rx="4"/><text x="351" y="248" text-anchor="middle" class="t">CDKN1B</text>
+  <rect x="418" y="230" width="118" height="26" fill="#c7e9c0" rx="4"/><text x="477" y="248" text-anchor="middle" class="t">XAF1</text>
+  <rect x="544" y="230" width="118" height="26" fill="#c7e9c0" rx="4"/><text x="603" y="248" text-anchor="middle" class="t">IFI44L</text>
+  <rect x="670" y="230" width="110" height="26" fill="#c7e9c0" rx="4"/><text x="725" y="248" text-anchor="middle" class="t">VNN2</text>
+</g>
+<text x="40" y="278" class="m" font-size="11">→ 10개(DEG∩MR) 중 LASSO가 <tspan font-weight="700" fill="#111">6개</tspan> 선택 (논문 6개와 5개 일치 · 재현은 TSPYL5 대신 IFI44L / FN1·ALDH2는 생존)</text>
+
+<!-- STEP 3 ROC 필터 -->
+<text x="20" y="320" class="t" font-size="13" font-weight="700">STEP 3. ROC 필터 — 학습셋·검증셋 둘 다에서 AUC &gt; 0.8 인 유전자만 통과  [Fig 4C–G]</text>
+<rect x="20" y="332" width="780" height="120" fill="#fff7ec" stroke="#f16913" stroke-width="1.5" rx="8"/>
+<text x="40" y="356" class="t" font-size="11.5" font-family="ui-monospace,monospace">roc(y, 발현) → AUC (pROC) · 학습+검증 둘 다 AUC&gt;0.8 여야 최종 후보</text>
+<!-- pass -->
+<rect x="40" y="368" width="360" height="70" fill="#e6f0fb" stroke="#1f77b4" stroke-width="1.5" rx="6"/>
+<text x="55" y="390" class="t" font-size="12" font-weight="700">✔ 통과 (AUC &gt; 0.8)</text>
+<text x="55" y="412" class="t" font-size="12.5" font-weight="700" fill="#1f77b4">FN1 · ALDH2</text>
+<text x="55" y="430" class="m" font-size="10.5">검증셋에서 단일 유전자로 가장 우수 → 최종 2개</text>
+<!-- fail -->
+<rect x="416" y="368" width="364" height="70" fill="#f4f4f5" stroke="#bbb" stroke-width="1.5" rx="6"/>
+<text x="431" y="390" class="t" font-size="12" font-weight="700">✗ 탈락 (검증셋 AUC &lt; 0.7)</text>
+<text x="431" y="412" class="t" font-size="12">CDKN1B · IFI44L · VNN2 · XAF1</text>
+<text x="431" y="430" class="m" font-size="10.5">학습셋은 괜찮아도 검증셋에서 성능 부족 → 제외</text>
+
+<!-- STEP 4 4모델 비교 -->
+<text x="20" y="482" class="t" font-size="13" font-weight="700">STEP 4. FN1 + ALDH2 를 4개 모델로 각각 평가 → 최고(GLM) 채택 (앙상블 아님)  [Fig 4H·I]</text>
+<rect x="20" y="494" width="780" height="150" fill="#f3eefb" stroke="#7b3fbf" stroke-width="1.5" rx="8"/>
+<g font-size="11.5">
+  <rect x="40" y="510" width="175" height="30" fill="#d9c9f0" rx="4"/><text x="127" y="530" text-anchor="middle" class="t" font-weight="700">RF (랜덤 포레스트)</text>
+  <rect x="225" y="510" width="175" height="30" fill="#d9c9f0" rx="4"/><text x="312" y="530" text-anchor="middle" class="t" font-weight="700">SVM (RBF 커널)</text>
+  <rect x="410" y="510" width="175" height="30" fill="#d9c9f0" rx="4"/><text x="497" y="530" text-anchor="middle" class="t" font-weight="700">XGBoost</text>
+  <rect x="595" y="510" width="185" height="30" fill="#c9b3ec" rx="4"/><text x="687" y="530" text-anchor="middle" class="t" font-weight="700">GLM ★ 최고</text>
+</g>
+<text x="40" y="566" class="m" font-size="11.5">→ 네 모델 <tspan font-weight="700" fill="#111">모두 검증셋 AUC &gt; 0.8</tspan> (교차확인) · 그중 검증 최고인 GLM 채택 (4개를 합친 게 아님)</text>
+<rect x="40" y="578" width="740" height="52" fill="#efe6fb" stroke="#7b3fbf" rx="6"/>
+<text x="55" y="600" class="t" font-size="12.5" font-family="ui-monospace,monospace" font-weight="700">GLM 검증셋 AUC : 논문 0.942 / 재현 0.972  (RF 0.845 · SVM 0.875 · XGB 0.825)</text>
+<text x="55" y="620" class="m" font-size="11">→ 최종 진단 시그니처 = <tspan font-weight="700" fill="#111">FN1 + ALDH2</tspan> (FN1 위험↑ / ALDH2 보호↓, DEG·MR과 일치)</text>
+
+<!-- narrowing funnel numbers -->
+<text x="20" y="676" class="t" font-size="12" font-weight="700">좁혀지는 흐름:</text>
+<text x="110" y="676" class="t" font-size="12.5" font-family="ui-monospace,monospace">10개(후보) &#8594; LASSO &#8594; 6개 &#8594; ROC AUC&gt;0.8 &#8594; 2개 &#8594; 4모델 결합 &#8594; FN1·ALDH2</text>
+
+<!-- 논문 vs 코드 차이 -->
+<text x="20" y="712" class="t" font-size="13" font-weight="700">⚠ 논문 vs 저자 업로드 코드 차이</text>
+<rect x="20" y="724" width="780" height="116" fill="#fdf6e3" stroke="#c9a227" stroke-width="1.5" rx="8"/>
+<text x="38" y="748" class="t" font-size="11.5"><tspan font-weight="700">논문 본문/그림:</tspan>  LASSO(10→6) → ROC AUC&gt;0.8 필터(6→2) → 4모델(RF·SVM·GLM·XGBoost) 결합</text>
+<text x="38" y="770" class="t" font-size="11.5"><tspan font-weight="700">저자 업로드 코드:</tspan>  ML1 = LASSO <tspan font-weight="700">∩</tspan> SVM-RFE 교집합 / ML2 = 유전자별 ROC(학습+검증)</text>
+<text x="38" y="790" class="m" font-size="11">· 저자 코드엔 ROC AUC&gt;0.8 자동필터·4모델 결합 스크립트가 빠져 있음 (SVM-RFE로 대체된 형태)</text>
+<text x="38" y="808" class="m" font-size="11">· 그림/개념은 <tspan font-weight="700" fill="#111">논문 Figure 4 기준</tspan>이 정확 → 재현 시 논문 흐름을 따르고 코드는 참고용</text>
+<text x="38" y="828" class="m" font-size="11">· 어느 경로든 <tspan font-weight="700" fill="#111">최종 결과는 FN1·ALDH2로 동일</tspan></text>
+</svg>

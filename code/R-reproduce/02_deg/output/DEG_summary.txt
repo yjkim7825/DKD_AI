@@ -1,0 +1,5 @@
+비교	DEG	Up	Down	논문
+Late_vs_Early	3314	1755	1559	2833
+Late_vs_Control	4022	2008	2014	3525
+Early_vs_Control	671	287	384	390
+GSE30529_DKD_vs_Control	1178	843	335	NA

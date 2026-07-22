@@ -1,0 +1,122 @@
+{
+  "candidates": [
+    "ALDH2",
+    "CA2",
+    "CDKN1B",
+    "CREB5",
+    "FN1",
+    "IFI44L",
+    "SYTL2",
+    "TSPYL5",
+    "VNN2",
+    "XAF1"
+  ],
+  "lambda_min": 0.00133,
+  "lambda_1se": 0.01778,
+  "A_lasso": [
+    "ALDH2",
+    "CA2",
+    "CDKN1B",
+    "FN1",
+    "VNN2",
+    "XAF1"
+  ],
+  "A_final_AUC08": [
+    "ALDH2",
+    "CA2",
+    "FN1"
+  ],
+  "A_combined": {
+    "GLM": [
+      0.978,
+      0.902
+    ],
+    "SVM(linear)": [
+      0.979,
+      0.887
+    ]
+  },
+  "A_roc": [
+    {
+      "gene": "ALDH2",
+      "AUC_train": 0.94,
+      "AUC_test": 0.807,
+      "pass_0.8": true
+    },
+    {
+      "gene": "CA2",
+      "AUC_train": 0.966,
+      "AUC_test": 0.918,
+      "pass_0.8": true
+    },
+    {
+      "gene": "CDKN1B",
+      "AUC_train": 0.967,
+      "AUC_test": 0.718,
+      "pass_0.8": false
+    },
+    {
+      "gene": "FN1",
+      "AUC_train": 0.909,
+      "AUC_test": 0.871,
+      "pass_0.8": true
+    },
+    {
+      "gene": "VNN2",
+      "AUC_train": 0.974,
+      "AUC_test": 0.649,
+      "pass_0.8": false
+    },
+    {
+      "gene": "XAF1",
+      "AUC_train": 0.778,
+      "AUC_test": 0.63,
+      "pass_0.8": false
+    }
+  ],
+  "B_svmrfe": [
+    "ALDH2",
+    "CDKN1B",
+    "CREB5",
+    "FN1",
+    "IFI44L",
+    "TSPYL5",
+    "VNN2",
+    "XAF1"
+  ],
+  "B_best_size": 8,
+  "B_intersect": [
+    "ALDH2",
+    "CDKN1B",
+    "FN1",
+    "VNN2",
+    "XAF1"
+  ],
+  "B_roc": [
+    {
+      "gene": "ALDH2",
+      "AUC_train": 0.94,
+      "AUC_test": 0.807
+    },
+    {
+      "gene": "CDKN1B",
+      "AUC_train": 0.967,
+      "AUC_test": 0.718
+    },
+    {
+      "gene": "FN1",
+      "AUC_train": 0.909,
+      "AUC_test": 0.871
+    },
+    {
+      "gene": "VNN2",
+      "AUC_train": 0.974,
+      "AUC_test": 0.649
+    },
+    {
+      "gene": "XAF1",
+      "AUC_train": 0.778,
+      "AUC_test": 0.63
+    }
+  ]
+}

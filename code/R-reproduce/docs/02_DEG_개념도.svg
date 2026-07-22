@@ -1,0 +1,55 @@
+<svg viewBox="0 0 780 580" xmlns="http://www.w3.org/2000/svg" font-family="system-ui, sans-serif">
+<title>DEG 개념도 — 발현이 달라진 유전자 골라내기</title>
+<desc>발현행렬을 limma로 비교해 기준(logFC·adjP) 통과 유전자를 DEG로. 3분류로 언제 변하는지 구분.</desc>
+<style>.t{fill:#1a1a1a;} .m{fill:#666;}</style>
+<defs><marker id="ar" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#666"/></marker></defs>
+
+<text x="20" y="30" class="t" font-size="18" font-weight="700">DEG — 발현이 달라진 유전자 골라내기 (후보 좁히기)</text>
+<text x="20" y="52" class="m" font-size="12.5">🎯 목적: 2만+ 유전자 중 어디가 문제인지 모름 → 정상·초기·말기서 발현 다른 것을 1차 필터</text>
+
+<!-- 입력 -->
+<text x="20" y="86" class="t" font-size="13" font-weight="700">⓪ 입력 — 발현행렬 (GSE142025)</text>
+<rect x="20" y="98" width="740" height="40" fill="#f0f6ff" stroke="#4575b4" stroke-width="1.5" rx="8"/>
+<text x="35" y="123" class="m" font-size="11.5">정상 9 / 초기 6 / 말기 21 샘플 · 검증셋 GSE30529(정상12/DKD10)</text>
+
+<!-- 방법 -->
+<text x="20" y="168" class="t" font-size="13" font-weight="700">① 방법 — limma (유전자별 통계 비교)</text>
+<rect x="20" y="180" width="740" height="40" fill="#f4f4f5" stroke="#d4d4d8" stroke-width="1.5" rx="8"/>
+<text x="35" y="205" class="t" font-size="11.5" font-family="ui-monospace,monospace">design → lmFit → makeContrasts → eBayes → topTable   (3비교: 초기vs정상 · 말기vs정상 · 말기vs초기)</text>
+
+<!-- 기준 -->
+<text x="20" y="250" class="t" font-size="13" font-weight="700">② 기준 — 둘 다 만족해야 DEG</text>
+<rect x="20" y="262" width="360" height="56" fill="#fff8e1" stroke="#f9a825" stroke-width="1.5" rx="8"/>
+<text x="35" y="284" class="t" font-size="12.5" font-weight="700">|logFC| &gt; 0.585</text>
+<text x="35" y="303" class="m" font-size="11">= 1.5배 이상 발현 변화 (크기)</text>
+<rect x="400" y="262" width="360" height="56" fill="#fff8e1" stroke="#f9a825" stroke-width="1.5" rx="8"/>
+<text x="415" y="284" class="t" font-size="12.5" font-weight="700">adj.P.Val &lt; 0.05</text>
+<text x="415" y="303" class="m" font-size="11">= 우연 아님 (FDR 보정, 유의성)</text>
+
+<!-- 결과 -->
+<text x="20" y="348" class="t" font-size="13" font-weight="700">③ 결과 — 진행할수록 DEG 급증</text>
+<rect x="20" y="360" width="230" height="56" fill="#f4f4f5" stroke="#d4d4d8" rx="8"/>
+<text x="135" y="382" text-anchor="middle" class="t" font-size="12" font-weight="700">초기 vs 정상 : 671</text>
+<text x="135" y="402" text-anchor="middle" class="m" font-size="10.5">초기엔 변화 적음</text>
+<rect x="262" y="360" width="230" height="56" fill="#f4f4f5" stroke="#d4d4d8" rx="8"/>
+<text x="377" y="382" text-anchor="middle" class="t" font-size="12" font-weight="700">말기 vs 초기 : 3,314</text>
+<text x="377" y="402" text-anchor="middle" class="m" font-size="10.5">진행하며 폭증</text>
+<rect x="504" y="360" width="256" height="56" fill="#fde8e8" stroke="#d62728" rx="8"/>
+<text x="632" y="382" text-anchor="middle" class="t" font-size="12" font-weight="700">말기 vs 정상 : 4,022</text>
+<text x="632" y="402" text-anchor="middle" class="m" font-size="10.5">최종 변화 최다 (FN1↑)</text>
+
+<!-- 3분류 -->
+<text x="20" y="446" class="t" font-size="13" font-weight="700">④ 언제 변하나 — 3분류 (우리 확장)</text>
+<rect x="20" y="458" width="240" height="46" fill="#fff3e0" stroke="#ff9800" stroke-width="1.5" rx="8"/>
+<text x="140" y="479" text-anchor="middle" class="t" font-size="12" font-weight="700">① 초기에만 : 432</text>
+<text x="140" y="496" text-anchor="middle" class="m" font-size="10">IEG(FOS·FOSB) 초기 감소</text>
+<rect x="270" y="458" width="230" height="46" fill="#e8f5e9" stroke="#2e7d32" stroke-width="1.5" rx="8"/>
+<text x="385" y="479" text-anchor="middle" class="t" font-size="12" font-weight="700">② 계속 변함 : 239</text>
+<text x="385" y="496" text-anchor="middle" class="m" font-size="10">초기부터 끝까지</text>
+<rect x="510" y="458" width="250" height="46" fill="#fde8e8" stroke="#d62728" stroke-width="1.5" rx="8"/>
+<text x="635" y="479" text-anchor="middle" class="t" font-size="12" font-weight="700">③ 말기에만 : 3,075</text>
+<text x="635" y="496" text-anchor="middle" class="m" font-size="10">말기에 대규모 붕괴</text>
+
+<text x="20" y="536" class="t" font-size="11.5" font-weight="700">▶ 결과물: 볼케이노(변화크기×유의성) · 히트맵(정상↔말기 색 반전) → 다음 단계(경로·MR) 후보 목록</text>
+<text x="20" y="556" class="m" font-size="11">한 줄: limma로 「크게(logFC) + 확실히(adjP)」 변한 유전자만 골라, 언제 변하는지까지 3분류</text>
+</svg>

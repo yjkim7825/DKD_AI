@@ -33,3 +33,13 @@ __pycache__/
 .Rhistory
 .RData
 .Rproj.user/
+
+# ===== R-reproduce 대용량 산출물 (재현시 재생성 가능 · 깃 제외) =====
+*.RDS
+*.rds
+*.npz
+.ipynb_checkpoints/
+code/R-reproduce/00_explore/sc_cache/
+code/R-reproduce/01_preprocessing/bulk/output/01_genematrix/
+code/R-reproduce/01_preprocessing/bulk/output/02_normalized/
+code/R-reproduce/**/output/*series_matrix.txt.gz

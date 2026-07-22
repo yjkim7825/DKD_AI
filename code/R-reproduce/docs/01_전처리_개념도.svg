@@ -1,0 +1,93 @@
+<svg viewBox="0 0 880 580" xmlns="http://www.w3.org/2000/svg" font-family="system-ui, sans-serif">
+<title>전처리 개요 — 분석마다 전처리가 다르다 (bulk / eQTL / scRNA)</title>
+<desc>세 분석(DEG·경로·ML / MR / 단일세포)은 입력 데이터 성격이 달라 각각 다른 전처리를 거쳐 서로 다른 최종 출력물을 만든다.</desc>
+<style>.t{fill:#1a1a1a;} .m{fill:#555;} .w{fill:#fff;}</style>
+<defs><marker id="ar" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#888"/></marker></defs>
+
+<text x="20" y="30" class="t" font-size="18" font-weight="700">전처리 개요 — 분석마다 전처리가 다르다</text>
+<text x="20" y="52" class="m" font-size="12.5">넣는 데이터 성격이 완전히 달라서, 각 분석 직전에 그 분석 전용 전처리를 거친다 (상세는 각 단계에서)</text>
+
+<!-- column captions -->
+<text x="255" y="74" text-anchor="middle" class="m" font-size="11" font-weight="700">입력</text>
+<text x="490" y="74" text-anchor="middle" class="m" font-size="11" font-weight="700">전처리 단계</text>
+<text x="748" y="74" text-anchor="middle" class="m" font-size="11" font-weight="700">최종 출력물</text>
+
+<!-- ===================== Track 1: bulk ===================== -->
+<rect x="20" y="82" width="150" height="90" fill="#4575b4" rx="8"/>
+<text x="95" y="120" text-anchor="middle" class="w" font-size="14" font-weight="700">bulk</text>
+<text x="95" y="141" text-anchor="middle" class="w" font-size="10.5">→ DEG · 경로 · ML</text>
+
+<rect x="185" y="82" width="140" height="90" fill="#eef4fb" stroke="#4575b4" stroke-width="1.5" rx="8"/>
+<text x="255" y="108" text-anchor="middle" class="t" font-size="11" font-weight="700">유전자 발현 표 여러 개</text>
+<text x="255" y="127" text-anchor="middle" class="m" font-size="10">어레이 probe / RNA-seq</text>
+<text x="255" y="145" text-anchor="middle" class="m" font-size="10">형식·척도 제각각</text>
+
+<rect x="345" y="82" width="290" height="90" fill="#f7f7f8" stroke="#d4d4d8" stroke-width="1.5" rx="8"/>
+<text x="360" y="105" class="m" font-size="10.5">① probe → gene (같은 gene 평균)</text>
+<text x="360" y="124" class="m" font-size="10.5">② log2 + 정규화 (밝기·눈금 통일)</text>
+<text x="360" y="143" class="m" font-size="10.5">③ 그룹 라벨 (Control / Early / Late)</text>
+<text x="360" y="162" class="m" font-size="10.5">④ 병합 + ComBat (여러 데이터 합칠 때만)</text>
+
+<rect x="655" y="82" width="185" height="90" fill="#eef4fb" stroke="#4575b4" stroke-width="1.5" rx="8"/>
+<text x="748" y="122" text-anchor="middle" class="t" font-size="12" font-weight="700">유전자 × 샘플</text>
+<text x="748" y="142" text-anchor="middle" class="t" font-size="12" font-weight="700">통합 발현표</text>
+
+<line x1="171" y1="127" x2="184" y2="127" stroke="#888" stroke-width="2" marker-end="url(#ar)"/>
+<line x1="326" y1="127" x2="344" y2="127" stroke="#888" stroke-width="2" marker-end="url(#ar)"/>
+<line x1="636" y1="127" x2="654" y2="127" stroke="#888" stroke-width="2" marker-end="url(#ar)"/>
+
+<!-- ===================== Track 2: eQTL ===================== -->
+<rect x="20" y="192" width="150" height="90" fill="#e08214" rx="8"/>
+<text x="95" y="230" text-anchor="middle" class="w" font-size="14" font-weight="700">eQTL</text>
+<text x="95" y="251" text-anchor="middle" class="w" font-size="10.5">→ MR (인과)</text>
+
+<rect x="185" y="192" width="140" height="90" fill="#fdf1e3" stroke="#e08214" stroke-width="1.5" rx="8"/>
+<text x="255" y="218" text-anchor="middle" class="t" font-size="11" font-weight="700">SNP 통계</text>
+<text x="255" y="237" text-anchor="middle" class="m" font-size="10">Zscore 또는 VCF</text>
+<text x="255" y="255" text-anchor="middle" class="m" font-size="10">수백만 개</text>
+
+<rect x="345" y="192" width="290" height="90" fill="#f7f7f8" stroke="#d4d4d8" stroke-width="1.5" rx="8"/>
+<text x="360" y="215" class="m" font-size="10.5">① Z → beta·SE 복원 (빈도로)</text>
+<text x="360" y="234" class="m" font-size="10.5">② p &lt; 5e-8 (발현과 강한 것만)</text>
+<text x="360" y="253" class="m" font-size="10.5">③ LD 클럼핑 (독립 SNP만, 중복 제거)</text>
+<text x="360" y="272" class="m" font-size="10.5">④ harmonise (결과와 방향 맞추기)</text>
+
+<rect x="655" y="192" width="185" height="90" fill="#fdf1e3" stroke="#e08214" stroke-width="1.5" rx="8"/>
+<text x="748" y="232" text-anchor="middle" class="t" font-size="12" font-weight="700">유전자별 독립</text>
+<text x="748" y="252" text-anchor="middle" class="t" font-size="12" font-weight="700">SNP(도구변수) 표</text>
+
+<line x1="171" y1="237" x2="184" y2="237" stroke="#888" stroke-width="2" marker-end="url(#ar)"/>
+<line x1="326" y1="237" x2="344" y2="237" stroke="#888" stroke-width="2" marker-end="url(#ar)"/>
+<line x1="636" y1="237" x2="654" y2="237" stroke="#888" stroke-width="2" marker-end="url(#ar)"/>
+
+<!-- ===================== Track 3: scRNA ===================== -->
+<rect x="20" y="302" width="150" height="90" fill="#2e7d32" rx="8"/>
+<text x="95" y="340" text-anchor="middle" class="w" font-size="14" font-weight="700">scRNA</text>
+<text x="95" y="361" text-anchor="middle" class="w" font-size="10.5">→ 단일세포</text>
+
+<rect x="185" y="302" width="140" height="90" fill="#e9f5ea" stroke="#2e7d32" stroke-width="1.5" rx="8"/>
+<text x="255" y="330" text-anchor="middle" class="t" font-size="11" font-weight="700">세포 × 유전자</text>
+<text x="255" y="349" text-anchor="middle" class="m" font-size="10">대부분 빈 방울(0)</text>
+<text x="255" y="367" text-anchor="middle" class="m" font-size="10">·죽은 세포 섞임</text>
+
+<rect x="345" y="302" width="290" height="90" fill="#f7f7f8" stroke="#d4d4d8" stroke-width="1.5" rx="8"/>
+<text x="360" y="325" class="m" font-size="10.5">① QC (빈 방울·죽은 세포 제거)</text>
+<text x="360" y="344" class="m" font-size="10.5">② 정규화</text>
+<text x="360" y="363" class="m" font-size="10.5">③ PCA 요약</text>
+<text x="360" y="382" class="m" font-size="10.5">④ Harmony (샘플 배치 정렬)</text>
+
+<rect x="655" y="302" width="185" height="90" fill="#e9f5ea" stroke="#2e7d32" stroke-width="1.5" rx="8"/>
+<text x="748" y="342" text-anchor="middle" class="t" font-size="12" font-weight="700">진짜 세포 × 유전자</text>
+<text x="748" y="362" text-anchor="middle" class="t" font-size="12" font-weight="700">+ 세포종류</text>
+
+<line x1="171" y1="347" x2="184" y2="347" stroke="#888" stroke-width="2" marker-end="url(#ar)"/>
+<line x1="326" y1="347" x2="344" y2="347" stroke="#888" stroke-width="2" marker-end="url(#ar)"/>
+<line x1="636" y1="347" x2="654" y2="347" stroke="#888" stroke-width="2" marker-end="url(#ar)"/>
+
+<!-- 한 줄 정리 -->
+<rect x="20" y="418" width="820" height="60" fill="#fafafa" stroke="#d4d4d8" rx="8"/>
+<text x="30" y="440" class="t" font-size="12.5" font-weight="700">한 줄 정리</text>
+<text x="30" y="461" class="m" font-size="11.5">bulk = 표를 한 실험처럼 맞춤 · eQTL = 깨끗한 지렛대 SNP만 골라냄 · scRNA = 진짜 세포만 남김</text>
+
+<text x="20" y="506" class="m" font-size="11">세 전처리의 최종 출력물이 각각 다음 단계(DEG·경로·ML / MR / 단일세포)의 입력이 된다. 상세 과정은 각 단계 안에서.</text>
+</svg>

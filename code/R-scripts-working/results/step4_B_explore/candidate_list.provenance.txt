@@ -1,3 +1,0 @@
-STEP4-B 탐색용 후보 목록 (사전 MR 필터 없음)
-정의: 전체 DEG union(Supp3 Late-Early ∪ Supp4 Late-Ctrl ∪ Supp5 Early-Ctrl)
-총 4323 genes | data.train 존재 2050 | FN1=TRUE ALDH2=TRUE

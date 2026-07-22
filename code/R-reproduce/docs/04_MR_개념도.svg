@@ -1,0 +1,82 @@
+<svg viewBox="0 0 780 760" xmlns="http://www.w3.org/2000/svg" font-family="system-ui, sans-serif">
+<title>MR 전체 — 도구변수 선택(p, LD)부터 IVW 가중평균까지</title>
+<desc>eQTL 입력을 p 필터와 LD clumping으로 도구변수 확정한 뒤 각 기울기를 IVW 가중평균. FN1 OR 2.78.</desc>
+<style>
+  .t{fill:#1a1a1a;} .m{fill:#666;}
+</style>
+<defs><marker id="ar" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#666"/></marker></defs>
+
+<text x="20" y="30" class="t" font-size="18" font-weight="700">MR — 유전자(예: FN1)가 DKD를 일으키나? (선택 → 인과)</text>
+
+<!-- STEP 0 도구변수 선택 -->
+<text x="20" y="58" class="t" font-size="13" font-weight="700">STEP 0. 도구변수 선택 — 빈도 합치기 전에 먼저</text>
+<rect x="20" y="70" width="740" height="128" fill="#f0f6ff" stroke="#4575b4" stroke-width="1.5" rx="8"/>
+<!-- funnel: eQTL 입력 → p<5e-8 → LD clumping → 도구변수 확정 -->
+<rect x="40" y="88" width="110" height="30" fill="#c6dbef" rx="4"/>
+<text x="95" y="108" text-anchor="middle" class="t" font-size="12.5" font-weight="700">eQTL</text>
+<line x1="150" y1="103" x2="186" y2="103" stroke="#666" stroke-width="2" marker-end="url(#ar)"/>
+<text x="168" y="95" text-anchor="middle" class="m" font-size="10">①</text>
+<rect x="191" y="88" width="160" height="30" fill="#9ecae1" rx="4"/>
+<text x="271" y="108" text-anchor="middle" class="t" font-size="12" font-weight="700">p &lt; 5e-8</text>
+<line x1="351" y1="103" x2="387" y2="103" stroke="#666" stroke-width="2" marker-end="url(#ar)"/>
+<text x="369" y="95" text-anchor="middle" class="m" font-size="10">②</text>
+<rect x="392" y="88" width="185" height="30" fill="#6baed6" rx="4"/>
+<text x="484" y="108" text-anchor="middle" class="t" font-size="12" font-weight="700">LD clumping (r²&lt;0.001)</text>
+<line x1="577" y1="103" x2="613" y2="103" stroke="#666" stroke-width="2" marker-end="url(#ar)"/>
+<rect x="618" y="88" width="122" height="30" fill="#d62728" rx="4"/>
+<text x="679" y="108" text-anchor="middle" fill="white" font-size="11.5" font-weight="700">도구변수 n개 확정</text>
+
+<text x="40" y="138" class="m" font-size="11.5">① <tspan font-weight="700" fill="#111">p &lt; 5e-8</tspan> : SNP↔발현 연관 확실한 것만 (약한 도구변수 편향 방지)</text>
+<text x="40" y="157" class="m" font-size="11.5">② <tspan font-weight="700" fill="#111">LD clumping (r²&lt;0.001)</tspan> : 서로 붙어다니는 중복 신호 제거 → 독립 SNP만</text>
+<text x="40" y="176" class="m" font-size="11.5">③ <tspan font-weight="700" fill="#111">빈도(eaf) 합쳐 Zscore→beta 변환</tspan> (eQTLGen은 Z만 줌 → 효과크기 원단위로)</text>
+<text x="56" y="193" class="t" font-size="11" font-family="ui-monospace,monospace">beta = Z / √(2·p·(1−p)·(N + Z²))   → 완성된 노출(도구변수)</text>
+
+<!-- STEP 1 지렛대 -->
+<text x="20" y="228" class="t" font-size="13" font-weight="700">STEP 1. SNP을 지렛대로 (태생 고정 → 화살표 원인쪽 한 방향)</text>
+<rect x="40" y="240" width="150" height="50" fill="#f4f4f5" stroke="#d4d4d8" stroke-width="1.5" rx="8"/>
+<text x="115" y="261" text-anchor="middle" class="t" font-size="12" font-weight="700">SNP</text>
+<text x="115" y="278" text-anchor="middle" class="m" font-size="10">태생 고정·불변</text>
+<rect x="315" y="240" width="150" height="50" fill="#f4f4f5" stroke="#d4d4d8" stroke-width="1.5" rx="8"/>
+<text x="390" y="261" text-anchor="middle" class="t" font-size="12" font-weight="700">유전자 발현</text>
+<text x="390" y="278" text-anchor="middle" class="m" font-size="10">노출 (예: FN1)</text>
+<rect x="590" y="240" width="150" height="50" fill="#f4f4f5" stroke="#d4d4d8" stroke-width="1.5" rx="8"/>
+<text x="665" y="261" text-anchor="middle" class="t" font-size="12" font-weight="700">DKD</text>
+<text x="665" y="278" text-anchor="middle" class="m" font-size="10">결과(질병)</text>
+<line x1="190" y1="265" x2="313" y2="265" stroke="#666" stroke-width="2" marker-end="url(#ar)"/>
+<text x="251" y="257" text-anchor="middle" class="m" font-size="10">eQTL</text>
+<line x1="465" y1="265" x2="588" y2="265" stroke="#d62728" stroke-width="2.5" marker-end="url(#ar)"/>
+<text x="526" y="257" text-anchor="middle" class="t" font-size="10.5" font-weight="700">인과?</text>
+
+<!-- STEP 2 표 -->
+<text x="20" y="322" class="t" font-size="13" font-weight="700">STEP 2. SNP마다 기울기 = 결과β(질병) ÷ 노출β(발현)</text>
+<rect x="40" y="334" width="700" height="112" fill="#fafafa" stroke="#d4d4d8" rx="6"/>
+<line x1="40" y1="356" x2="740" y2="356" stroke="#d4d4d8"/>
+<g font-size="11" font-family="ui-monospace,monospace">
+  <text x="55" y="350" class="m">SNP</text><text x="235" y="350" class="m">노출β</text><text x="345" y="350" class="m">결과β</text><text x="470" y="350" class="m">기울기</text><text x="600" y="350" class="m">가중치 w=1/SE²</text>
+  <text x="55" y="376" class="t">rs10932612</text><text x="240" y="376" class="t">−0.211</text><text x="350" y="376" class="t">−0.248</text><text x="485" y="376" class="t" font-weight="700">1.18</text><text x="645" y="376" class="t">4.19</text>
+  <text x="55" y="398" class="t">rs17525860</text><text x="240" y="398" class="t">−0.136</text><text x="350" y="398" class="t">−0.021</text><text x="485" y="398" class="t" font-weight="700">0.16</text><text x="645" y="398" class="t">1.29</text>
+  <text x="55" y="420" class="t">rs615857</text><text x="240" y="420" class="t">−0.089</text><text x="350" y="420" class="t">−0.167</text><text x="485" y="420" class="t" font-weight="700">1.87</text><text x="645" y="420" class="t">0.54</text>
+</g>
+<text x="55" y="439" class="m" font-size="10">w = 1/SE² : 오차 작을수록(정확할수록) 크게 반영</text>
+
+<!-- STEP 3 IVW -->
+<text x="20" y="478" class="t" font-size="13" font-weight="700">STEP 3. IVW = 3개 기울기의 가중평균</text>
+<rect x="40" y="490" width="700" height="92" fill="#eef4ff" stroke="#4575b4" stroke-width="1.5" rx="8"/>
+<text x="60" y="518" class="t" font-size="15" font-family="ui-monospace,monospace" font-weight="700">β_IVW = Σ(기울기ⱼ × wⱼ) / Σwⱼ</text>
+<text x="60" y="544" class="m" font-size="12.5" font-family="ui-monospace,monospace">= (1.18×4.19 + 0.16×1.29 + 1.87×0.54) / (4.19+1.29+0.54)</text>
+<text x="60" y="568" class="t" font-size="12.5" font-family="ui-monospace,monospace">= 6.15/6.02 = <tspan font-weight="700">1.021</tspan>    SE = √(1/Σw) = 0.408</text>
+
+<!-- STEP 4 결과 -->
+<text x="20" y="612" class="t" font-size="13" font-weight="700">STEP 4. OR = exp(β) → 위험/보호</text>
+<rect x="40" y="624" width="340" height="112" fill="#fde8e8" stroke="#d62728" stroke-width="1.5" rx="8"/>
+<text x="60" y="652" class="t" font-size="14" font-family="ui-monospace,monospace" font-weight="700">OR = exp(1.021) = 2.78</text>
+<text x="60" y="676" class="m" font-size="12">FN1 · SNP 3개 · p = 0.012</text>
+<text x="60" y="700" fill="#d62728" font-size="13" font-weight="700">→ 위험 ↑ (발현↑ → DKD↑)</text>
+<text x="60" y="722" class="m" font-size="10.5">OR&gt;1 위험 / p&lt;0.05 인과 유의</text>
+
+<rect x="400" y="624" width="340" height="112" fill="#e6f0fb" stroke="#1f77b4" stroke-width="1.5" rx="8"/>
+<text x="420" y="652" class="t" font-size="14" font-family="ui-monospace,monospace" font-weight="700">ALDH2 : OR = 0.67</text>
+<text x="420" y="676" class="m" font-size="12">도구변수 14개 · p=0.032</text>
+<text x="420" y="700" fill="#1f77b4" font-size="13" font-weight="700">→ 보호 ↓ (발현↑ → DKD↓)</text>
+<text x="420" y="722" class="m" font-size="10.5">OR&lt;1 보호</text>
+</svg>

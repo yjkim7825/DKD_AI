@@ -1,0 +1,15 @@
+gene,kind,dataset,pval,foldchange,r
+FN1,GFR,Ju CKD Glom,6.91e-15,,-0.523
+FN1,GFR,Woroniecka Diabetes TubInt,4.95e-5,,-0.755
+FN1,GFR,Woroniecka Diabetes Glom,4.94e-4,,-0.680
+FN1,GFR,ERCB Nephrotic Syndrome TubInt,0.025,,-0.772
+FN1,GFR,ERCB Nephrotic Syndrome TubInt,0.030,,-0.755
+ALDH2,GFR,Ju CKD TubInt,2.69e-13,,0.503
+ALDH2,GFR,Woroniecka Diabetes TubInt,0.015,,0.736
+FN1,DvC,Woroniecka Diabetes Glom,8.12e-6,2.808,
+FN1,DvC,Ju CKD Glom,2.00e-4,3.631,
+FN1,DvC,Woroniecka Diabetes TubInt,2.44e-4,5.271,
+FN1,DvC,Schmid Diabetes TubInt,7.70e-4,2.342,
+FN1,DvC,Schmid Diabetes TubInt,0.001,2.646,
+FN1,DvC,ERCB Nephrotic Syndrome TubInt,0.025,2.688,
+ALDH2,DvC,Ju CKD Glom,0.001,-1.705,

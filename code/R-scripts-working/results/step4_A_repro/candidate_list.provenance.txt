@@ -1,3 +1,0 @@
-STEP4-A 재현용 후보 목록
-정의: Supp Table 4 DEG(Late DKD vs Control) ∩ MR-union(Supp6 FinnGen ∪ Supp7 GWAScat)
-총 63 genes | data.train 존재 45 | FN1=TRUE ALDH2=TRUE

@@ -1,5 +1,0 @@
-"model","AUC_train","AUC_valid"
-"GLM",0.98,0.82
-"RF",1,0.927
-"SVM",0.973,0.8
-"XGBoost",0.997,0.898

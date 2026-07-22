@@ -1,0 +1,5 @@
+"dataset","gene","PCT","dPCT","dir","wilcox_p"
+"Early(GSE131882)","FN1",0.114,0.114,"↓dPCT",0.694
+"Early(GSE131882)","ALDH2",0.202,0.165,"↓dPCT",0.185
+"Late(GSE209781)","FN1",0.024,0.035,"↑dPCT",0.0095
+"Late(GSE209781)","ALDH2",1.753,1.266,"↓dPCT",3.09e-85

@@ -1,5 +1,0 @@
-"dataset","genes","samples","control","dkd","paper_control","paper_dkd","ctrl_match","dkd_match","log2_min","log2_max","FN1_present","ALDH2_present","FN1_mean","ALDH2_mean"
-"GSE96804",33720,61,20,41,20,41,TRUE,TRUE,1.79,13.08,TRUE,TRUE,7.466,8.33
-"GSE30529",13041,22,12,10,12,10,TRUE,TRUE,3.18,14.87,TRUE,TRUE,7.469,11.71
-"GSE104948",12042,33,21,12,21,12,TRUE,TRUE,2.82,14.72,TRUE,TRUE,7.434,12.378
-"GSE104954",12042,38,21,17,21,17,TRUE,TRUE,2.58,14.48,TRUE,TRUE,5.946,11.479

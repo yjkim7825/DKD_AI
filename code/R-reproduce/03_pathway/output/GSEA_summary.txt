@@ -1,0 +1,9 @@
+비교	DB	유의경로	켜짐	꺼짐
+Early_vs_Control	Hallmark	17	5	16
+Early_vs_Control	KEGG	78	68	72
+Late_vs_Control	Hallmark	22	15	7
+Late_vs_Control	KEGG	40	27	16
+Late_vs_Early	Hallmark	18	16	2
+Late_vs_Early	KEGG	51	37	21
+GSE30529_DKD_vs_Control	Hallmark	16	12	4
+GSE30529_DKD_vs_Control	KEGG	30	29	16
